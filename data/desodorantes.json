@@ -35,7 +35,7 @@
     "ml": 0,
     "tipo": "Desodorante",
     "precio": 13500,
-    "imagen": "img/desos/deso-homme-white.webp",
+    "imagen": "img/desos/deso-home-white.webp",
     "descripcion": "Desodorante corporal con aroma inspirado en .",
     "stock": true,
     "activo": true
@@ -49,7 +49,7 @@
     "ml": 0,
     "tipo": "Desodorante",
     "precio": 13500,
-    "imagen": "img/desos/deso-cdn-untold.webp",
+    "imagen": "img/desos/deso-cdn-untold.jpg",
     "descripcion": "Desodorante corporal con aroma inspirado en .",
     "stock": true,
     "activo": true
