@@ -1,0 +1,22 @@
+[
+  {
+    "nombre": "Perfumes",
+    "imagen": "img/categorias/perfumes.jpg",
+    "link": "#perfumes"
+  },
+  {
+    "nombre": "Decants",
+    "imagen": "img/categorias/decants.jpg",
+    "link": "#decants"
+  },
+  {
+    "nombre": "Promos",
+    "imagen": "img/categorias/promos.jpg",
+    "link": "#promos"
+  },
+  {
+    "nombre": "Desodorantes",
+    "imagen": "img/categorias/desodorantes.jpg",
+    "link": "#desodorantes"
+  }
+]

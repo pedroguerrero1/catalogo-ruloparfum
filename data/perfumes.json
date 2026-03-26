@@ -1,4 +1,40 @@
 [
+ {  
+  "id": 100,
+  "nombre": "Xerjoff Erba Pura",
+  "marca": "Xerjoff",
+  "genero": "unisex",
+  "ml": 100,
+  "tipo": "EDP",
+  "precio": 360000,
+  "imagen": "img/erba-pura.webp",
+
+  "descripcion": "Fresco, frutal y muy vibrante. Ideal para cualquier uso y para quienes buscan una fragancia llamativa y duradera.",
+
+  "notas_salida": "Naranja siciliana, bergamota de Calabria y limón siciliano",
+  "notas_corazon": "Frutas",
+  "notas_fondo": "Almizcle blanco, vainilla de Madagascar y ámbar",
+  "stock": true,
+  "activo": true
+ },
+ {
+  "id": 851,
+  "nombre": "Valentino Uomo Born in Roma extradose",
+  "marca": "Valentino",
+  "genero": "Hombre",
+  "ml": 100,
+  "tipo": "EDP",
+  "precio": 260000,
+  "imagen": "img/valentino-born-extradose.webp",
+
+  "descripcion": "Intenso, especiado y muy elegante. Ideal para noche, salidas y clima fresco, con un toque moderno y seductor.",
+
+  "notas_salida": "Notas especiadas",
+  "notas_corazon": "Lavanda silvestre",
+  "notas_fondo": "Notas amaderadas",
+  "stock": true,
+  "activo": true
+ },
  {
   "id": 101,
   "nombre": "9PM Night Out",

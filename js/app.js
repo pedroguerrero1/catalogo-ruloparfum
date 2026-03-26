@@ -78,6 +78,50 @@ function cardTemplate(p){
   `;
 }
 
+function categoryTemplate(c){
+  return `
+    <article class="category-card">
+      <a href="${c.link}">
+        <div class="thumb">
+          <img src="${c.imagen}" alt="${c.nombre}">
+        </div>
+        <h2>${c.nombre}</h2>
+      </a>
+    </article>
+  `;
+}
+
+const categorias = [
+  {
+    nombre: "Perfumes",
+    imagen: "img/categorias/perfumes.webp",
+    link: "#perfumes"
+  },
+  {
+    nombre: "Decants",
+    imagen: "img/categorias/decants.webp",
+    link: "#decants"
+  },
+  {
+    nombre: "Promos",
+    imagen: "img/categorias/promos.webp",
+    link: "#promos"
+  },
+  {
+    nombre: "Desodorantes",
+    imagen: "img/categorias/desodorantes.webp",
+    link: "#desodorantes"
+  }
+];
+
+
+function renderCategories(categorias){
+  const container = document.querySelector(".home-categories");
+  container.innerHTML = categorias.map(categoryTemplate).join("");
+}
+
+renderCategories(categorias);
+
 function renderPerfumes(list){
   grid.innerHTML = list.map(cardTemplate).join("");
   empty.classList.toggle("hidden", list.length !== 0);
