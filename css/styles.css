@@ -281,33 +281,87 @@ body{
 /* Arreglo para que las categorías no se estiren */
 .home-categories {
   display: flex;
-  gap: 15px;
-  overflow-x: auto; /* Permite scroll horizontal si son muchas */
-  padding: 10px;
-  scrollbar-width: none; /* Esconde la barra en Firefox */
+  justify-content: center; /* Centra las tarjetas en PC */
+  gap: 25px;
+  flex-wrap: wrap; /* Para que bajen si no entran en pantallas chicas */
+  padding: 30px 10px;
+  margin-bottom: 40px;
 }
 
+.home-categories::-webkit-scrollbar {
+  display: none; /* Esconde barra en Chrome/Safari */
+}
+
+/* TARJETA DE CATEGORÍA */
 .category-card {
-  min-width: 140px; /* Tamaño fijo para que no se achiquen */
-  max-width: 140px;
-  flex-shrink: 0;
+  min-width: 140px;
+  max-width: 160px;
+  flex: 1; /* Ayuda a que se distribuyan parejo */
+  text-align: center;
+  transition: transform 0.3s ease;
 }
 
-.category-card h2 {
-  font-size: 14px;
-  white-space: nowrap; /* Evita que el nombre salte a dos líneas */
+.category-card a {
+  text-decoration: none;
+  display: block;
+}
+
+/* CÍRCULO O CUADRO DE LA FOTO */
+.category-card .thumb {
+  width: 110px; /* Un poco más grandes para PC */
+  height: 110px;
+  margin: 0 auto 15px;
+  background: var(--panel); /* Fondo oscuro coherente */
+  border: 2px solid var(--border);
+  border-radius: 28px; /* Bordes premium redondeados */
   overflow: hidden;
-  text-overflow: ellipsis; /* Si es muy largo, pone "..." */
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+  transition: all 0.4s ease;
 }
 
 .category-card .thumb img {
-  width: 100%;
-  aspect-ratio: 1 / 1; /* Las hace cuadraditas y pro */
-  object-fit: cover;
-  border-radius: 12px;
+  width: 85%;
+  height: 85%;
+  object-fit: contain;
 }
 
+/* TÍTULO DE LA CATEGORÍA */
+.category-card h2 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold); /* Títulos en dorado para que resalten */
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.category-card:hover h2 {
+  color: var(--gold);
+}
+
+/* EFECTOS AL PASAR EL MOUSE */
+.category-card:hover .thumb {
+  transform: translateY(-8px);
+  border-color: var(--gold);
+  box-shadow: 0 15px 30px rgba(200, 146, 46, 0.25);
+}
+
+.category-card:hover img {
+  transform: scale(1.1);
+}
+
+
+/* DETALLE EXTRA: El brillo sobre la foto */
+.category-card .thumb::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+  pointer-events: none;
+}
 
 .content{
   padding: 12px 12px 14px;
@@ -782,4 +836,14 @@ body{
   justify-content: center;
   font-weight: bold;
   border: 2px solid var(--bg);
+}
+
+.btn-cart-icon {
+  transition: all 0.3s ease; /* Hace que el cambio de color sea suave */
+}
+
+.btn-cart-icon.active {
+  background: #25d366 !important; /* Color verde WhatsApp al estar activo */
+  color: white;
+  transform: scale(1.1); /* Se agranda un poquito al activarse */
 }

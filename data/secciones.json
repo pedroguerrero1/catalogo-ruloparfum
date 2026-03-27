@@ -1,22 +1,22 @@
 [
   {
     "nombre": "Perfumes",
-    "imagen": "img/categorias/perfumes.jpg",
+    "imagen": "img/categorias/perfumes.webp",
     "link": "#perfumes"
   },
   {
     "nombre": "Decants",
-    "imagen": "img/categorias/decants.jpg",
+    "imagen": "img/categorias/decants.webp",
     "link": "#decants"
   },
   {
     "nombre": "Promos",
-    "imagen": "img/categorias/promos.jpg",
+    "imagen": "img/categorias/promos.webp",
     "link": "#promos"
   },
   {
     "nombre": "Desodorantes",
-    "imagen": "img/categorias/desodorantes.jpg",
+    "imagen": "img/categorias/desodorantes.webp",
     "link": "#desodorantes"
   }
 ]

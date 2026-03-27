@@ -76,6 +76,7 @@ function sendAllFavs() {
 
 function cardTemplate(p){
   const placeholder = imgSrc("img/placeholder.webp");
+  const isFav = favoritos.includes(p.id);
 
   return `
     <article class="card">
@@ -83,7 +84,7 @@ function cardTemplate(p){
         ${p.stock === false ? '<div class="badge-out">Agotado</div>' : ''}
         <img src="${imgSrc(p.imagen)}" alt="${p.nombre}" onerror="this.onerror=null; this.src='${placeholder}'">
         <button class="btn-fav-icon ${favoritos.includes(p.id) ? 'active' : ''}" onclick="toggleFav(${p.id}, event)">
-            ${favoritos.includes(p.id) ? '❤️' : '🤍'}
+            ${favoritos.includes(p.id) ? '🛒' : '➕'}
         </button>
       </div>
 
@@ -284,7 +285,10 @@ function applyFilters(){
     });
   }
 
-  render(list);
+  renderPerfumes(list); 
+  renderDecants(decants); 
+  renderPromos(promos);
+  renderDesodorantes(desodorantes);
 }
 
 // ===== INIT =====
