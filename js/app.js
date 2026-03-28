@@ -83,8 +83,8 @@ function cardTemplate(p){
       <div class="thumb">
         ${p.stock === false ? '<div class="badge-out">Agotado</div>' : ''}
         <img src="${imgSrc(p.imagen)}" alt="${p.nombre}" onerror="this.onerror=null; this.src='${placeholder}'">
-        <button class="btn-fav-icon ${favoritos.includes(p.id) ? 'active' : ''}" onclick="toggleFav(${p.id}, event)">
-            ${favoritos.includes(p.id) ? '🛒' : '➕'}
+        <button class="btn-cart-action ${isFav ? 'active' : ''}" onclick="toggleFav(${p.id}, event)">
+          ${isFav ? '🛒 Quitar' : '➕ Agregar'}
         </button>
       </div>
 

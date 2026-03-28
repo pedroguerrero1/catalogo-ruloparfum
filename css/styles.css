@@ -297,9 +297,9 @@ body{
 .category-card {
   background: #ffffff; /* Blanco Puro Total */
   border-radius: 24px; /* Bordes muy redondeados premium */
-  padding: 25px 15px;
-  min-width: 160px; /* Un poco más anchas para que respiren */
-  max-width: 180px;
+  padding: 20px 10px;
+  min-width: 170px; /* Un poco más anchas para que respiren */
+  max-width: 190px;
   flex: 1; /* Se distribuyen parejo */
   text-align: center;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Sombra para que flote */
@@ -313,18 +313,25 @@ body{
 
 /* CÍRCULO O CUADRO DE LA FOTO */
 .category-card .thumb {
-  width: 110px; /* Un poco más grandes para PC */
-  height: 110px;
-  margin: 0 auto 15px;
-  background: var(--panel); /* Fondo oscuro coherente */
-  border: 2px solid var(--border);
-  border-radius: 28px; /* Bordes premium redondeados */
-  overflow: hidden;
+  width: 130px;
+  height: 130px;
+  margin: 0 auto 10px;
+  background: transparent; /* Sacamos el azul oscuro */
+  border-radius: 0; /* Ya no necesita ser un círculo/cuadrado con fondo */
+  overflow: visible; /* Para que la imagen respire */
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-  transition: all 0.4s ease;
+  border: none; /* Sacamos el borde que encierra la foto */
+}
+
+.category-card img {
+  width: 95%;   /* La imagen ocupa casi todo el ancho del contenedor */
+  height: 95%;  /* La imagen ocupa casi todo el alto del contenedor */
+  object-fit: contain; /* Asegura que no se deforme */
+  /* Mantenemos la sombra suave facha para que flote sobre el blanco */
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.15));
+  transition: transform 0.4s ease;
 }
 
 .category-card .thumb img {
@@ -354,7 +361,7 @@ body{
 }
 
 .category-card:hover img {
-  transform: scale(1.1);
+  transform: scale(1.1) rotate(3deg); /* Un pequeño giro facha al pasar el mouse */
 }
 
 
@@ -847,8 +854,42 @@ body{
   transition: all 0.3s ease; /* Hace que el cambio de color sea suave */
 }
 
-.btn-cart-icon.active {
-  background: #25d366 !important; /* Color verde WhatsApp al estar activo */
+
+/* BOTÓN DE ACCIÓN INTUITIVO */
+.btn-cart-action {
+  position: absolute;
+  top: 10px;
+  left: 8px;
+  background: var(--gold); /* Dorado Rulo */
   color: white;
-  transform: scale(1.1); /* Se agranda un poquito al activarse */
+  border: none;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  z-index: 20;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+}
+
+/* Cuando ya está agregado (Cambia a verde y se nota el cambio) */
+.btn-cart-action.active {
+  background: #25d366; /* Verde WhatsApp */
+  box-shadow: 0 0 15px rgba(37, 211, 102, 0.4);
+}
+
+/* Efecto al tocar con el dedo */
+.btn-cart-action:active {
+  transform: scale(0.95);
+}
+
+/* Aseguramos que el contenedor de la imagen no lo tape */
+.thumb {
+  position: relative;
 }
