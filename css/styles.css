@@ -710,6 +710,29 @@ body{
   font-weight: 850;
 }
 
+/* --- EFECTO DE OCULTAR HEADER AL ABRIR MODAL --- */
+
+/* Cuando el body tiene la clase modal-open, la topbar sube y desaparece */
+body.modal-open .topbar {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Agregamos una transición suave a la topbar para que el efecto sea facha */
+.topbar {
+  transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.3s ease;
+}
+
+/* Opcional: También ocultamos el botón del carrito y el de volver arriba para que no molesten */
+body.modal-open .fav-float, 
+body.modal-open #topBtn {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.8);
+  transition: all 0.3s ease;
+}
+
 @media (max-width: 640px) {
   .modal {
     padding: 10px; /* Menos espacio alrededor */
