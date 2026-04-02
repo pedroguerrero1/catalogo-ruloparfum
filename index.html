@@ -154,13 +154,13 @@
   <img src="img/whatsapp.svg" alt="WhatsApp">
 </a>
  
-<script src="js/app.js"></script>
- 
-<div id="favButton" class="fav-float" onclick="toggleCart()" style="left: 20px; right: auto; background: var(--gold);">
-  <span>🛒</span>
+<!-- Botón flotante del carrito (izquierda) -->
+<div id="favButton" class="fav-float-new" onclick="toggleCart()" style="display:none;">
+  <span class="cart-icon-main">🛒</span>
   <div class="fav-count" id="favCount">0</div>
 </div>
-
+ 
+<!-- Panel lateral del carrito -->
 <div id="cartDrawer" class="cart-drawer">
   <div class="cart-drawer__backdrop" onclick="toggleCart()"></div>
   <div class="cart-drawer__content">
@@ -169,9 +169,8 @@
       <button onclick="toggleCart()" class="close-cart">✕</button>
     </div>
     
-    <div id="cartItems" class="cart-items">
-      </div>
-
+    <div id="cartItems" class="cart-items"></div>
+ 
     <div class="cart-footer">
       <div class="cart-total">
         <span>Total estimado:</span>
@@ -183,12 +182,7 @@
     </div>
   </div>
 </div>
-
-<div id="favButton" class="fav-float-new" onclick="toggleCart()">
-  <span class="cart-icon-main">🛒</span>
-  <div class="fav-count" id="favCount">0</div>
-</div>
-
+ 
+<script src="js/app.js"></script>
 </body>
 </html>
- 
