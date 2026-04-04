@@ -216,11 +216,11 @@ body{
     height: auto;
     padding: 12px 14px;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
   }
 
-  /* Fila 1: logo + nombre (ocupa todo el ancho) */
+  /* Fila 1: logo + nombre */
   .brand {
     flex: 1;
     min-width: 0;
@@ -230,12 +230,13 @@ body{
   .brandSub  { font-size: 11px; }
   .logo--icon { width: 42px; height: 42px; }
 
-  /* .actions es el contenedor de buscador + botones */
+  /* .actions ocupa toda la fila */
   .actions {
     order: 2;
     width: 100%;
     flex-wrap: wrap;
     gap: 8px;
+    align-items: center;
   }
 
   /* Fila 2: buscador ancho completo */
@@ -244,24 +245,30 @@ body{
     flex: none;
     height: 44px;
     font-size: 14px;
-    order: 1;
   }
 
-  /* Fila 3: Categoría + select al 50/50 */
-  .menu-toggle {
+  /* Fila 3: actions-row con Categoría + select al 50/50 */
+  .actions-row {
+    display: flex;   /* En mobile vuelve a ser flex (en PC era contents) */
+    width: 100%;
+    gap: 8px;
+  }
+
+  .actions-row > * {
     flex: 1;
+  }
+
+  .menu-toggle {
     height: 44px;
     justify-content: center;
     font-size: 13px;
     padding: 0 12px;
-    order: 2;
     border-radius: 12px;
+    width: 100%;
   }
 
   .select-wrap {
-    flex: 1;
     width: auto;
-    order: 3;
   }
 
   .select-wrap .select {
