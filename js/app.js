@@ -180,8 +180,6 @@ const modalTitle = document.getElementById("modalTitle");
 const modalPrice = document.getElementById("modalPrice");
 const modalBadges = document.getElementById("modalBadges");
 const modalDesc = document.getElementById("modalDesc");
-const modalDur = document.getElementById("modalDur");
-const modalEstela = document.getElementById("modalEstela");
 const modalWa = document.getElementById("modalWa");
 
 function openModal(p){
@@ -196,8 +194,6 @@ function openModal(p){
   document.getElementById("notas-salida").textContent = p.notas_salida || "-";
   document.getElementById("notas-corazon").textContent = p.notas_corazon || "-";
   document.getElementById("notas-fondo").textContent = p.notas_fondo || "-";
-  modalDur.textContent = p.duracion || "-";
-  modalEstela.textContent = p.estela || "-";
   modalWa.href = waLink(p);
 }
 
@@ -209,6 +205,10 @@ function closeModal(){
 
 document.addEventListener("click", (e) => {
   if (e.target.id === "modalClose" || e.target.closest("#modalClose") || e.target.classList.contains("modal__backdrop")) closeModal();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeModal();
 });
 
 function applyFilters(){
