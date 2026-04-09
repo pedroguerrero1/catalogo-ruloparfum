@@ -772,7 +772,7 @@
   "notas_salida": "Cítricos frescos y notas marinas",
   "notas_corazon": "Lavanda y notas verdes ligeras",
   "notas_fondo": "Almizcle, ámbar blanco y maderas suaves",
-  "stock": true,
+  "stock": false,
   "activo": true
 },
 {
@@ -790,7 +790,7 @@
   "notas_salida": "Cítricos frescos y bergamota",
   "notas_corazon": "Flores blancas y notas aromáticas",
   "notas_fondo": "Ambar, almizcle y maderas suaves",
-  "stock": true,
+  "stock": false,
   "activo": true
 },
 {
@@ -998,7 +998,7 @@
   "genero": "mujer",
   "ml": 100,
   "tipo": "EDP",
-  "precio": 64000,
+  "precio": 86500,
   "imagen": "img/lattafa-angham-second-song.webp",
 
   "descripcion": "Envolvente, frutal y sumamente sofisticado. Ideal para noche, ocasiones especiales y clima fresco.",
@@ -2499,7 +2499,7 @@
   "notas_salida": "Mango, piña y bergamota.",
   "notas_corazon": "Coco y acordes marinos.",
   "notas_fondo": "Ámbar, sándalo, almizcle y vetiver.",
-  "stock": true,
+  "stock": false,
   "activo": true
 },
 {

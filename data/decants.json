@@ -1179,7 +1179,7 @@
     "precio": 9000,
     "imagen": "img/dec/decant-musamam-black.webp",
     "descripcion": "Ideal para probar antes de comprar el frasco completo.",
-    "stock": true,
+    "stock": false,
     "activo": true
   },
   {
