@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Migrar productos a Firebase</title>
+  <style>
+    body { font-family: monospace; background: #0a0a0a; color: #e5e5e5; padding: 30px; }
+    h1 { color: #c8922e; }
+    button { background: #c8922e; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 8px; cursor: pointer; margin: 8px 4px; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    #log { margin-top: 20px; background: #111; padding: 20px; border-radius: 8px; max-height: 500px; overflow-y: auto; line-height: 1.8; }
+    .ok { color: #25d366; }
+    .err { color: #ff4444; }
+    .info { color: #c8922e; }
+  </style>
+</head>
+<body>
+  <h1>🔥 Migración a Firebase</h1>
+  <p>Esta página sube todos tus productos JSON a Firestore. Usala una sola vez.</p>
+
+  <button onclick="migrar('perfumes')" id="btn-perfumes">Migrar Perfumes</button>
+  <button onclick="migrar('decants')" id="btn-decants">Migrar Decants</button>
+  <button onclick="migrar('promos')" id="btn-promos">Migrar Promos</button>
+  <button onclick="migrar('desodorantes')" id="btn-desodorantes">Migrar Desodorantes</button>
+  <button onclick="migrarTodo()" id="btn-todo" style="background:#25d366">Migrar TODO</button>
+
+  <div id="log"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDBxkSDdPDlE_7mekIvl_GKzgC_GXzCcuw",
+      authDomain: "ruloparfum.firebaseapp.com",
+      projectId: "ruloparfum",
+      storageBucket: "ruloparfum.firebasestorage.app",
+      messagingSenderId: "167849199505",
+      appId: "1:167849199505:web:d5822af67e5f2024aa3c30"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const log = (msg, tipo = '') => {
+      const div = document.getElementById('log');
+      div.innerHTML += `<div class="${tipo}">${msg}</div>`;
+      div.scrollTop = div.scrollHeight;
+    };
+
+    window.migrar = async (seccion) => {
+      const btn = document.getElementById(`btn-${seccion}`);
+      btn.disabled = true;
+      log(`<br>📦 Iniciando migración de <strong>${seccion}</strong>...`, 'info');
+
+      try {
+        const res = await fetch(`data/${seccion}.json`);
+        if (!res.ok) throw new Error(`No se encontró data/${seccion}.json`);
+        const productos = await res.json();
+
+        // Borrar doc temporal si existe
+        try { await deleteDoc(doc(db, seccion, 'temp')); } catch(e) {}
+
+        let ok = 0, err = 0;
+        for (const p of productos) {
+          try {
+            await setDoc(doc(db, seccion, String(p.id)), p);
+            log(`✅ ${p.nombre}`, 'ok');
+            ok++;
+          } catch(e) {
+            log(`❌ Error en ${p.nombre}: ${e.message}`, 'err');
+            err++;
+          }
+        }
+        log(`<br>✅ ${seccion}: ${ok} subidos, ${err} errores.`, 'ok');
+      } catch(e) {
+        log(`❌ ${e.message}`, 'err');
+      }
+
+      btn.disabled = false;
+    };
+
+    window.migrarTodo = async () => {
+      document.getElementById('btn-todo').disabled = true;
+      for (const s of ['perfumes', 'decants', 'promos', 'desodorantes']) {
+        await window.migrar(s);
+      }
+      log('<br>🎉 Migración completa. Ya podés cerrar esta página.', 'info');
+      document.getElementById('btn-todo').disabled = false;
+    };
+  </script>
+</body>
+</html>

@@ -90,7 +90,7 @@
   "activo": true
 },
 {
-  "id": 852,
+  "id": 854,
   "nombre": "Azzaro Wanted Men EDT ",
   "marca": "Azzaro",
   "genero": "Hombre",
@@ -104,6 +104,24 @@
   "notas_salida": "Limon, jengibre y lavanda",
   "notas_corazon": "Cardamomo, enebro y manzana",
   "notas_fondo": "Haba tonka, vetiver y amberwood",
+  "stock": true,
+  "activo": true
+},
+{
+  "id": 855,
+  "nombre": "The Most Wanted Intense",
+  "marca": "Azzaro",
+  "genero": "Hombre",
+  "ml": 100,
+  "tipo": "EDP",
+  "precio": 155000,
+  "imagen": "img/azzaro-most-wanted-int.webp",
+
+  "descripcion": "Magnético, oscuro y muy elegante. Ideal para noche, salidas y clima fresco. Un perfume moderno y seductor.",
+
+  "notas_salida": "Bergamota",
+  "notas_corazon": "Lavanda",
+  "notas_fondo": "Licor y musgo",
   "stock": true,
   "activo": true
 },
@@ -1442,6 +1460,24 @@
   "activo": true
 },
 {
+  "id": 100010,
+  "nombre": "Hayaati Florence",
+  "marca": "Lattafa",
+  "genero": "mujer",
+  "ml": 100,
+  "tipo": "EDP",
+  "precio": 48000,
+  "imagen": "img/hayaati-florence.webp",
+
+  "descripcion": "Radiante, floral y muy elegante. Ideal para diario, salidas y climas templados, con un corazón jugoso de frutos rojos y base cálida de vainilla.",
+
+  "notas_salida": "Pomelo rosa y Clementina",
+  "notas_corazon": "Frutos rojos y rosa",
+  "notas_fondo": "Vainilla, almizcle y ámbar",
+  "stock": true,
+  "activo": true
+},
+{
   "id": 520,
   "nombre": "His Confession",
   "marca": "Lattafa",
@@ -2085,6 +2121,150 @@
   "notas_salida": "Caramelo y azafrán",
   "notas_corazon": "Gamuza, cuero y haba tonka",
   "notas_fondo": "Vainilla, ámbar y almizcle.",
+  "stock": true,
+  "activo": true
+},
+{
+  "id": 100004,
+  "nombre": "Ajwad",
+  "marca": "Lattafa",
+  "genero": "unisex",
+  "ml": 60,
+  "tipo": "EDP",
+  "precio": 43000,
+  "imagen": "img/ajwad.webp",
+
+  "descripcion": "Exótico, frutal y sumamente elegante. Ideal para diario, salidas y climas templados, con un corazón jugoso de rosa y base moderna de almizcle.",
+
+  "notas_salida": "Notas afrutadas",
+  "notas_corazon": "Rosa y jazmín",
+  "notas_fondo": "Vainilla, cedro, ámbar y almizcle.",
+  "stock": true,
+  "activo": true
+},
+{
+  "id": 100006,
+  "nombre": "Ameer Al Oudh Intense Oud",
+  "marca": "Lattafa",
+  "genero": "unisex",
+  "ml": 100,
+  "tipo": "EDP",
+  "precio": 45000,
+  "imagen": "img/ameer-al-oudh-int.webp",
+
+  "descripcion": "Distinguido, especiado y muy elegante. Ideal para noche, ocasiones especiales y clima fresco.",
+
+  "notas_salida": "Notas amaderadas y madera de oud",
+  "notas_corazon": "Azúcar y vainilla",
+  "notas_fondo": "Madera de oud, sándalo y notas herbales",
+  "stock": true,
+  "activo": true
+},
+{
+  "id": 100007,
+  "nombre": "Eternal Vanille",
+  "marca": "Lattafa",
+  "genero": "unisex",
+  "ml": 100,
+  "tipo": "EDP",
+  "precio": 78000,
+  "imagen": "img/external-vanille.webp",
+
+  "descripcion": "Cremoso, especiado y muy elegante. Ideal para noche, salidas y clima frío, con un corazón jugoso de canela y base cálida de vainilla bourbon que aporta un toque moderno y seductor.",
+
+  "notas_salida": "Zarzamora",
+  "notas_corazon": "Cocoa pulse, cacao y Caviar de vainilla",
+  "notas_fondo": "Akigalawood, Ambrofix, haba tonka, cedro, almizcle y benjuí",
+  "stock": true,
+  "activo": true
+},
+{
+  "id": 100009,
+  "nombre": "Jasoor",
+  "marca": "Lattafa",
+  "genero": "unisex",
+  "ml": 100,
+  "tipo": "EDP",
+  "precio": 55000,
+  "imagen": "img/jasoor.webp",
+
+  "descripcion": "Equilibrado, aromático y muy elegante. Ideal para diario, salidas y clima templado, con un corazón jugoso de manzana.",
+
+  "notas_salida": "Manzana, cardamomo y bergamota",
+  "notas_corazon": "Tabaco, lavanda y geranio",
+  "notas_fondo": "Haba tonka, cuero, vetiver y pachulí",
+  "stock": true,
+  "activo": true
+},
+{
+  "id": 100008,
+  "nombre": "Khanjar",
+  "marca": "Lattafa",
+  "genero": "unisex",
+  "ml": 85,
+  "tipo": "EDP",
+  "precio": 100000,
+  "imagen": "img/khanjar.webp",
+
+  "descripcion": "Majestuoso, ahumado y muy elegante. Ideal para noche, eventos formales y clima frío.",
+
+  "notas_salida": "Nuez moscada, pimienta y jengibre",
+  "notas_corazon": "Violeta, pachulí y cachemira",
+  "notas_fondo": "Cuero, incienso, vetiver y almizcle",
+  "stock": true,
+  "activo": true
+},
+{
+  "id": 100005,
+  "nombre": "Mohra",
+  "marca": "Lattafa",
+  "genero": "unisex",
+  "ml": 100,
+  "tipo": "EDP",
+  "precio": 43000,
+  "imagen": "img/mohra.webp",
+
+  "descripcion": "Distinguido, especiado y muy elegante. Ideal para noche, ocasiones especiales y clima fresco.",
+
+  "notas_salida": "Lavanda, azafrán y bergamota",
+  "notas_corazon": "Pimienta negra, cachemira y rosa",
+  "notas_fondo": "Cedro, pachulí y sándalo",
+  "stock": true,
+  "activo": true
+},
+{
+  "id": 100001,
+  "nombre": "Urban Man Paradise",
+  "marca": "Fragrance World",
+  "genero": "hombre",
+  "ml": 90,
+  "tipo": "EDP",
+  "precio": 57000,
+  "imagen": "img/urban-man-paradise.webp",
+
+  "descripcion": "Tropical, fresco y muy elegante. Ideal para diario, verano y salidas informales.",
+
+  "notas_salida": "Bergamota y naranja",
+  "notas_corazon": "Coco y lavanda",
+  "notas_fondo": "Haba tonka y sándalo",
+  "stock": true,
+  "activo": true
+},
+{
+  "id": 100002,
+  "nombre": "Urban Women Paradise",
+  "marca": "Fragrance World",
+  "genero": "mujer",
+  "ml": 90,
+  "tipo": "EDP",
+  "precio": 57000,
+  "imagen": "img/urban-women-paradise.webp",
+
+  "descripcion": "Exótico, floral y muy elegante. Ideal para diario, clima cálido y ocasiones especiales.",
+
+  "notas_salida": "Agua de coco",
+  "notas_corazon": "Jazmín e iris",
+  "notas_fondo": "Vainilla, sándalo y ámbar",
   "stock": true,
   "activo": true
 },
