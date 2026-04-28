@@ -47,6 +47,17 @@ async function cargarColeccion(nombre) {
   }
 }
 
+async function cargarColeccion(nombre) {
+  try {
+    const q = query(collection(db, nombre), orderBy("id"));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => d.data()).filter(p => p.id && p.id !== 'temp');
+  } catch(e) {
+    console.warn(`No se pudo cargar ${nombre}:`, e);
+    return [];
+  }
+}
+
 const WHATSAPP_NUMBER = "5493535669706";
 
 const grid            = document.getElementById("grid");
@@ -164,19 +175,23 @@ async function cardTemplate(p){
     </article>`;
 }
 
-function categoryTemplate(c){
+async function categoryTemplate(c){
+  const imgUrl = await getImgUrl(c.imagen);
   return `
     <article class="category-card">
       <a href="${c.link}">
-        <div class="thumb"><img src="${c.imagen}" alt="${c.nombre}" onerror="this.onerror=null;this.src='img/placeholder.webp'"></div>
+        <div class="thumb"><img src="${imgUrl}" alt="${c.nombre}" onerror="this.onerror=null;this.src='img/placeholder.webp'"></div>
         <h2>${c.nombre}</h2>
       </a>
     </article>`;
 }
 
-function renderCategories(lista){
+async function renderCategories(lista){
   const container = document.querySelector(".home-categories");
-  if (container) container.innerHTML = lista.map(categoryTemplate).join("");
+  if (container) {
+    const cards = await Promise.all(lista.map(categoryTemplate));
+    container.innerHTML = cards.join("");
+  }
 }
 
 async function renderPerfumes(list){

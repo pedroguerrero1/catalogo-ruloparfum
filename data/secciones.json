@@ -1,22 +1,22 @@
 [
   {
     "nombre": "Perfumes",
-    "imagen": "img/categorias/perfumes.webp",
+    "imagen": "https://firebasestorage.googleapis.com/v0/b/ruloparfum.firebasestorage.app/o/img%2Fcategorias%2Fperfumes.webp?alt=media&token=99eeed4e-0497-455e-9b27-5b8caff600a9",
     "link": "#perfumes"
   },
   {
     "nombre": "Decants",
-    "imagen": "img/categorias/decants.webp",
+    "imagen": "https://firebasestorage.googleapis.com/v0/b/ruloparfum.firebasestorage.app/o/img%2Fcategorias%2Fdecants.webp?alt=media&token=c702fe34-01a5-42bf-be87-7cbc3f9168d3",
     "link": "#decants"
   },
   {
     "nombre": "Promos",
-    "imagen": "img/categorias/promos.webp",
+    "imagen": "https://firebasestorage.googleapis.com/v0/b/ruloparfum.firebasestorage.app/o/img%2Fcategorias%2Fpromos.webp?alt=media&token=334ebc43-e532-4e00-a5d1-6b863e8c66d9",
     "link": "#promos"
   },
   {
     "nombre": "Desodorantes",
-    "imagen": "img/categorias/desodorantes.webp",
+    "imagen": "https://firebasestorage.googleapis.com/v0/b/ruloparfum.firebasestorage.app/o/img%2Fcategorias%2Fdesodorantes.webp?alt=media&token=513b05f2-48a1-43f6-96ed-3bc79e0b70ff",
     "link": "#desodorantes"
   }
 ]
