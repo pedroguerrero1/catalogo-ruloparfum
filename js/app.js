@@ -47,17 +47,6 @@ async function cargarColeccion(nombre) {
   }
 }
 
-async function cargarColeccion(nombre) {
-  try {
-    const q = query(collection(db, nombre), orderBy("id"));
-    const snap = await getDocs(q);
-    return snap.docs.map(d => d.data()).filter(p => p.id && p.id !== 'temp');
-  } catch(e) {
-    console.warn(`No se pudo cargar ${nombre}:`, e);
-    return [];
-  }
-}
-
 const WHATSAPP_NUMBER = "5493535669706";
 
 const grid            = document.getElementById("grid");
