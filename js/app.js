@@ -21,9 +21,7 @@ const urlCache = {};
 
 async function getImgUrl(path) {
   if (!path) return 'img/placeholder.webp';
-  // Si ya es una URL completa (http/https), usarla directamente
   if (path.startsWith('http')) return path;
-  // Si está en cache, devolverla
   if (urlCache[path]) return urlCache[path];
   try {
     const clean = path.replace(/^\/+/, '');
@@ -31,7 +29,6 @@ async function getImgUrl(path) {
     urlCache[path] = url;
     return url;
   } catch(e) {
-    // Si no está en Storage, intentar cargar localmente como fallback
     return path.replace(/^\/+/, '');
   }
 }
@@ -47,7 +44,26 @@ async function cargarColeccion(nombre) {
   }
 }
 
+// ===== CONSTANTES =====
 const WHATSAPP_NUMBER = "5493535669706";
+
+function moneyARS(n) {
+  return new Intl.NumberFormat("es-AR").format(n);
+}
+
+function capitalize(str) {
+  if (!str) return "-";
+  return str.split(",").map(s => {
+    const t = s.trim();
+    return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+  }).join(", ");
+}
+
+function waLink(perfume) {
+  const precioTexto = perfume.stock === false ? "Sin stock" : `$${moneyARS(perfume.precio)}`;
+  const msg = `Hola! Vi en la web el *${perfume.nombre}* (${perfume.ml}ml) por ${precioTexto}. ¿Lo tenés disponible?`;
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+}
 
 const grid            = document.getElementById("grid");
 const decantsGrid     = document.getElementById("decantsGrid");
@@ -63,20 +79,7 @@ let promos       = [];
 let desodorantes = [];
 let favoritos    = JSON.parse(localStorage.getItem('rulo_favs')) || [];
 
-function capitalize(str) {
-  if (!str) return "-";
-  return str.split(",").map(s => {
-    const t = s.trim();
-    return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
-  }).join(", ");
-}
-
-function waLink(perfume){
-  const precioTexto = perfume.stock === false ? "Sin stock" : `$${moneyARS(perfume.precio)}`;
-  const msg = `Hola! Vi en la web el *${perfume.nombre}* (${perfume.ml}ml) por ${precioTexto}. ¿Lo tenés disponible?`;
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
-}
-
+// ===== TOAST =====
 function showToast(nombre, agregado) {
   const old = document.getElementById("cartToast");
   if (old) old.remove();
@@ -94,6 +97,7 @@ function showToast(nombre, agregado) {
   }, 2200);
 }
 
+// ===== CARRITO =====
 window.toggleFav = function(id, event) {
   if(event) event.stopPropagation();
   const index = favoritos.indexOf(id);
@@ -123,7 +127,8 @@ window.openModalById = function(id) {
   if (p) openModal(p);
 }
 
-async function cardTemplate(p){
+// ===== TEMPLATES =====
+async function cardTemplate(p) {
   const placeholder = 'img/placeholder.webp';
   const isFav = favoritos.includes(p.id);
   const outOfStock = p.stock === false;
@@ -168,7 +173,7 @@ async function cardTemplate(p){
     </article>`;
 }
 
-async function categoryTemplate(c){
+async function categoryTemplate(c) {
   const imgUrl = await getImgUrl(c.imagen);
   return `
     <article class="category-card">
@@ -179,7 +184,8 @@ async function categoryTemplate(c){
     </article>`;
 }
 
-async function renderCategories(lista){
+// ===== RENDERS =====
+async function renderCategories(lista) {
   const container = document.querySelector(".home-categories");
   if (container) {
     const cards = await Promise.all(lista.map(categoryTemplate));
@@ -187,20 +193,20 @@ async function renderCategories(lista){
   }
 }
 
-async function renderPerfumes(list){
+async function renderPerfumes(list) {
   const cards = await Promise.all(list.map(cardTemplate));
   grid.innerHTML = cards.join("");
   empty.classList.toggle("hidden", list.length !== 0);
 }
 
-async function renderDecants(list){
+async function renderDecants(list) {
   if (decantsGrid) {
     const cards = await Promise.all(list.filter(p => p.activo !== false).map(cardTemplate));
     decantsGrid.innerHTML = cards.join("");
   }
 }
 
-async function renderPromos(list){
+async function renderPromos(list) {
   const section = document.getElementById("promos");
   const activos = list.filter(p => p.activo !== false);
   if (section) section.style.display = activos.length === 0 ? "none" : "";
@@ -210,13 +216,14 @@ async function renderPromos(list){
   }
 }
 
-async function renderDesodorantes(list){
+async function renderDesodorantes(list) {
   if (desodorantsGrid) {
     const cards = await Promise.all(list.filter(p => p.activo !== false).map(cardTemplate));
     desodorantsGrid.innerHTML = cards.join("");
   }
 }
 
+// ===== MODAL =====
 const modal       = document.getElementById("modal");
 const modalImg    = document.getElementById("modalImg");
 const modalTitle  = document.getElementById("modalTitle");
@@ -225,12 +232,13 @@ const modalBadges = document.getElementById("modalBadges");
 const modalDesc   = document.getElementById("modalDesc");
 const modalWa     = document.getElementById("modalWa");
 
-async function openModal(p){
+async function openModal(p) {
   modal.classList.remove("hidden");
   document.body.classList.add("modal-open");
   document.body.style.overflow = "hidden";
   modalImg.src = await getImgUrl(p.imagen);
   modalTitle.textContent = p.nombre;
+
   if (p.stock === false) {
     modalPrice.innerHTML = "Sin stock";
   } else if (p.precio_descuento) {
@@ -242,6 +250,7 @@ async function openModal(p){
   } else {
     modalPrice.innerHTML = `<span class="price-actual">$${moneyARS(p.precio)}</span>`;
   }
+
   modalBadges.innerHTML = `<span class="badge">${p.marca || "-"}</span><span class="badge">${p.genero || "-"}</span><span class="badge">${p.ml || "-"}ml</span>`;
   modalDesc.textContent = p.descripcion || "Consultá disponibilidad por WhatsApp.";
   document.getElementById("notas-salida").textContent  = capitalize(p.notas_salida);
@@ -250,7 +259,7 @@ async function openModal(p){
   modalWa.href = waLink(p);
 }
 
-function closeModal(){
+function closeModal() {
   modal.classList.add("hidden");
   document.body.classList.remove("modal-open");
   document.body.style.overflow = "";
@@ -261,7 +270,8 @@ document.addEventListener("click", (e) => {
 });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
 
-async function applyFilters(){
+// ===== FILTROS =====
+async function applyFilters() {
   const q = (search?.value || "").toLowerCase();
   const f = (filter?.value || "all");
   const matchesQuery  = (p) => (p.nombre || "").toLowerCase().includes(q) || (p.marca || "").toLowerCase().includes(q);
@@ -282,10 +292,10 @@ async function applyFilters(){
     const sec = document.getElementById("decants");
     if (sec) sec.style.display = listD.length === 0 && q ? "none" : "";
   }
-  const promosSec = document.getElementById("promos");
   if (promosGrid) {
     const cards = await Promise.all(listPr.map(cardTemplate));
     promosGrid.innerHTML = cards.join("");
+    const promosSec = document.getElementById("promos");
     if (promosSec) promosSec.style.display = listPr.length === 0 ? "none" : "";
   }
   if (desodorantsGrid) {
@@ -299,6 +309,7 @@ async function applyFilters(){
   empty.classList.toggle("hidden", totalResultados !== 0 || !q);
 }
 
+// ===== MENÚ =====
 const menuToggle = document.getElementById("menuToggle");
 const mobileMenu = document.getElementById("mobileMenu");
 if (menuToggle && mobileMenu) {
@@ -312,6 +323,7 @@ document.addEventListener("click", (e) => {
 if (search) search.addEventListener("input", applyFilters);
 if (filter)  filter.addEventListener("change", applyFilters);
 
+// ===== BOTÓN VOLVER ARRIBA =====
 const topBtn = document.getElementById("topBtn");
 if (topBtn) {
   topBtn.style.display = "none";
@@ -319,6 +331,7 @@ if (topBtn) {
   topBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
 }
 
+// ===== CARRITO DRAWER =====
 window.toggleCart = function() {
   const drawer = document.getElementById("cartDrawer");
   if (!drawer) return;
@@ -364,7 +377,8 @@ function updateFavUI() {
   if (drawer && drawer.classList.contains("is-open")) renderCartItems();
 }
 
-async function init(){
+// ===== INIT =====
+async function init() {
   if (grid) grid.innerHTML = `<div style="color:var(--muted);padding:20px;grid-column:1/-1">Cargando productos...</div>`;
 
   [perfumes, decants, promos, desodorantes] = await Promise.all([
@@ -379,10 +393,10 @@ async function init(){
     if (resS.ok) renderCategories(await resS.json());
   } catch(e) {}
 
-  renderDecants(decants);
-  renderPromos(promos);
-  renderDesodorantes(desodorantes);
-  applyFilters();
+  await renderDecants(decants);
+  await renderPromos(promos);
+  await renderDesodorantes(desodorantes);
+  await applyFilters();
   updateFavUI();
 }
 
