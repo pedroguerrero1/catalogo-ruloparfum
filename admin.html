@@ -1099,5 +1099,13 @@
     if (e.target === document.getElementById('modalOverlay')) window.cerrarModal();
   });
 </script>
+<script>
+  // Desregistrar service worker en el admin para evitar problemas de cache
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      registrations.forEach(r => r.unregister());
+    });
+  }
+</script>
 </body>
 </html>
