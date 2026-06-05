@@ -150,9 +150,11 @@ async function cardTemplate(p) {
           </div>
           <div class="price">
             ${outOfStock ? "Sin stock" : `
-              ${p.precio_descuento ? `<span class="price-original">$${moneyARS(p.precio)}</span>` : ''}
-              <span class="price-actual">$${moneyARS(p.precio_descuento || p.precio)}</span>
-              ${p.precio_descuento ? `<span class="price-badge">-${Math.round((1 - p.precio_descuento / p.precio) * 100)}%</span>` : ''}
+              <div class="price-line">
+                ${p.precio_descuento ? `<span class="price-original">$${moneyARS(p.precio)}</span>` : ''}
+                <span class="price-actual">$${moneyARS(p.precio_descuento || p.precio)}</span>
+                ${p.precio_descuento ? `<span class="price-badge">-${Math.round((1 - p.precio_descuento / p.precio) * 100)}%</span>` : ''}
+              </div>
             `}
           </div>
         </div>
@@ -363,7 +365,7 @@ async function renderCartItems() {
         <img src="${imgUrl}" onerror="this.src='img/placeholder.webp'">
         <div class="cart-item-info">
           <div>${p.nombre}</div>
-          <div class="price">$${moneyARS(p.precio)}</div>
+          <div class="price">$${moneyARS(p.precio_descuento || p.precio)}</div>
         </div>
         <button onclick="toggleFav(${p.id}, event)" style="background:none;border:none;color:#ff4444;font-size:18px;cursor:pointer;">✕</button>
       </div>`;

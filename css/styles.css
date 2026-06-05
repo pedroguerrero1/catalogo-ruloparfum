@@ -1154,8 +1154,15 @@ body.modal-open #topBtn {
   font-size: 11px;
   font-weight: 700;
   padding: 2px 7px;
-  margin-left: 6px;
+  margin-left: 4px;
   vertical-align: middle;
+}
+
+.price-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
 }
 
 /* ===== TOAST DE CONFIRMACIÓN ===== */
