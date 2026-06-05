@@ -549,6 +549,25 @@
 </head>
 <body>
 
+<!-- ===== SPLASH ===== -->
+<div id="splashScreen" style="
+  position:fixed; inset:0; background:#070a12;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center; z-index:9999; gap:16px;">
+  <img src="icon-192.png" style="width:72px;height:72px;border-radius:18px;" onerror="this.style.display='none'">
+  <div style="color:#c8922e;font-family:Poppins,sans-serif;font-size:14px;font-weight:600;">Cargando...</div>
+  <div style="width:40px;height:3px;background:rgba(200,146,46,.2);border-radius:2px;overflow:hidden;">
+    <div style="height:100%;background:#c8922e;animation:load 1.2s ease-in-out infinite;" id="loadBar"></div>
+  </div>
+</div>
+<style>
+  @keyframes load {
+    0% { width:0%; margin-left:0; }
+    50% { width:100%; margin-left:0; }
+    100% { width:0%; margin-left:100%; }
+  }
+</style>
+
 <!-- ===== LOGIN ===== -->
 <div id="loginScreen">
   <div class="login-box">
@@ -705,7 +724,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
   const firebaseConfig = {
@@ -721,6 +740,9 @@
   const db      = getFirestore(app);
   const auth    = getAuth(app);
   const storage = getStorage(app);
+
+  // Mantener sesión guardada localmente
+  setPersistence(auth, browserLocalPersistence);
 
   // Cache de URLs de imágenes
   const urlCache = {};
@@ -748,6 +770,10 @@
 
   // ===== AUTH =====
   onAuthStateChanged(auth, user => {
+    // Ocultar splash siempre
+    const splash = document.getElementById('splashScreen');
+    if (splash) splash.style.display = 'none';
+
     if (user) {
       document.getElementById('loginScreen').style.display  = 'none';
       document.getElementById('adminPanel').style.display   = 'block';
@@ -1072,11 +1098,6 @@
   document.getElementById('modalOverlay').addEventListener('click', e => {
     if (e.target === document.getElementById('modalOverlay')) window.cerrarModal();
   });
-</script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
-  }
 </script>
 </body>
 </html>
