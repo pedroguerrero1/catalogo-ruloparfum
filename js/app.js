@@ -279,7 +279,11 @@ async function applyFilters() {
   const sortFn = f === "asc" ? (a,b) => a.precio - b.precio : f === "desc" ? (a,b) => b.precio - a.precio : null;
 
   let listP = perfumes.filter(p => p.activo !== false && matchesQuery(p) && matchesGender(p));
-  if (sortFn) listP.sort(sortFn);
+  if (sortFn) {
+    listP.sort(sortFn);
+  } else {
+    listP.sort((a, b) => b.precio - a.precio); // Por defecto: más caros primero
+  }
   await renderPerfumes(listP);
 
   const listD  = decants.filter(p => p.activo !== false && matchesQuery(p));
