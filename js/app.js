@@ -358,7 +358,7 @@ async function renderCartItems() {
     return;
   }
   const items = await Promise.all(seleccionados.map(async p => {
-    total += Number(p.precio) || 0;
+    total += Number(p.precio_descuento || p.precio) || 0;
     const imgUrl = await getImgUrl(p.imagen);
     return `
       <div class="cart-item">
