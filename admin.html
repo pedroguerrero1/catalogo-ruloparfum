@@ -829,6 +829,14 @@
       await renderLista(productos);
       renderTabla(productos);
       renderStats();
+      // Fix Safari: forzar re-render si la lista quedó vacía
+      setTimeout(async () => {
+        const lista = document.getElementById('productosList');
+        if (lista && lista.querySelectorAll('.producto-card').length === 0 && productos.length > 0) {
+          await renderLista(productos);
+          renderTabla(productos);
+        }
+      }, 500);
     } catch(e) { console.error(e); }
   }
 
