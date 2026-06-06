@@ -857,7 +857,6 @@
     `;
   }
 
-  // ===== RENDER MOBILE (cards) =====
   async function renderLista(lista) {
     const container = document.getElementById('productosList');
     if (lista.length === 0) {
@@ -865,7 +864,6 @@
       return;
     }
 
-    // Renderizar primero sin imágenes para que aparezca rápido
     container.innerHTML = lista.map(p => {
       const estadoLabel = p.activo === false ? 'inactivo' : p.stock === false ? 'agotado' : 'activo';
       const estadoTexto = p.activo === false ? 'Inactivo' : p.stock === false ? 'Sin stock' : 'Con stock';
@@ -889,7 +887,12 @@
         </div>`;
     }).join('');
 
-    // Cargar imágenes lazy en segundo plano
+    // Forzar repintado en Safari
+    container.style.display = 'none';
+    container.offsetHeight; // fuerza reflow
+    container.style.display = 'flex';
+
+    // Cargar imágenes lazy
     container.querySelectorAll('img[data-src]').forEach(async img => {
       const url = await getImgUrl(img.dataset.src);
       if (url) img.src = url;
