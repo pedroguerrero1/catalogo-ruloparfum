@@ -855,8 +855,8 @@
       return;
     }
 
-    const items = await Promise.all(lista.map(async p => {
-      const imgUrl = await getImgUrl(p.imagen);
+    // Renderizar primero sin imágenes para que aparezca rápido
+    container.innerHTML = lista.map(p => {
       const estadoLabel = p.activo === false ? 'inactivo' : p.stock === false ? 'agotado' : 'activo';
       const estadoTexto = p.activo === false ? 'Inactivo' : p.stock === false ? 'Sin stock' : 'Con stock';
       const toggleLabel = p.stock === false ? '✅ Activar' : '🚫 Agotar';
@@ -864,7 +864,7 @@
 
       return `
         <div class="producto-card">
-          <img class="producto-card-img" src="${imgUrl || 'img/placeholder.webp'}" onerror="this.src='img/placeholder.webp'" />
+          <img class="producto-card-img" data-src="${p.imagen || ''}" src="img/placeholder.webp" onerror="this.src='img/placeholder.webp'" />
           <div class="producto-card-info">
             <div class="producto-card-nombre">${p.nombre}</div>
             <div class="producto-card-meta">
@@ -877,9 +877,13 @@
             <button class="btn-toggle ${toggleClass}" onclick="toggleStock(${p.id})">${toggleLabel}</button>
           </div>
         </div>`;
-    }));
+    }).join('');
 
-    container.innerHTML = items.join('');
+    // Cargar imágenes lazy en segundo plano
+    container.querySelectorAll('img[data-src]').forEach(async img => {
+      const url = await getImgUrl(img.dataset.src);
+      if (url) img.src = url;
+    });
   }
 
   // ===== RENDER PC (tabla) =====
