@@ -723,7 +723,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, doc, setDoc, updateDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
@@ -819,27 +819,27 @@
   };
 
   // ===== CARGAR =====
-  async function cargarProductos(intento = 1) {
+  let unsubscribe = null;
+
+  async function cargarProductos() {
     document.getElementById('productosList').innerHTML = '<div class="loading">Cargando...</div>';
     document.getElementById('productosBody').innerHTML = '<tr><td colspan="6" class="loading">Cargando...</td></tr>';
-    try {
-      const q    = query(collection(db, tabActual), orderBy('id'));
-      const snap = await getDocs(q);
-      productos  = snap.docs.map(d => d.data()).filter(p => p.id && p.id !== 'temp');
 
-      // Si no hay productos y tenemos reintentos disponibles, volver a intentar
-      if (productos.length === 0 && intento < 3) {
-        setTimeout(() => cargarProductos(intento + 1), 800);
-        return;
-      }
+    // Cancelar listener anterior si existe
+    if (unsubscribe) { unsubscribe(); unsubscribe = null; }
 
+    const q = query(collection(db, tabActual), orderBy('id'));
+
+    unsubscribe = onSnapshot(q, async snap => {
+      productos = snap.docs.map(d => d.data()).filter(p => p.id && p.id !== 'temp');
       await renderLista(productos);
       renderTabla(productos);
       renderStats();
-    } catch(e) {
-      console.error(e);
-      if (intento < 3) setTimeout(() => cargarProductos(intento + 1), 800);
-    }
+    }, error => {
+      console.error('onSnapshot error:', error);
+      // Reintento en caso de error
+      setTimeout(cargarProductos, 1000);
+    });
   }
 
   // ===== STATS =====
