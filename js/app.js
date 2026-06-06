@@ -404,6 +404,11 @@ async function init() {
   await renderDesodorantes(desodorantes);
   await applyFilters();
   updateFavUI();
+
+  // Si la grilla quedó vacía, reintentar una vez
+  if (grid && grid.children.length === 0 && perfumes.length > 0) {
+    await applyFilters();
+  }
 }
 
 init();
