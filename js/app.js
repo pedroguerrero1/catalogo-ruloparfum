@@ -25,7 +25,11 @@ async function getImgUrl(path) {
   if (urlCache[path]) return urlCache[path];
   try {
     const clean = path.replace(/^\/+/, '');
-    const url = await getDownloadURL(ref(storage, clean));
+    // Timeout de 4 segundos para que no bloquee en Safari
+    const url = await Promise.race([
+      getDownloadURL(ref(storage, clean)),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000))
+    ]);
     urlCache[path] = url;
     return url;
   } catch(e) {
@@ -196,9 +200,56 @@ async function renderCategories(lista) {
 }
 
 async function renderPerfumes(list) {
-  const cards = await Promise.all(list.map(cardTemplate));
-  grid.innerHTML = cards.join("");
-  empty.classList.toggle("hidden", list.length !== 0);
+  if (list.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.remove("hidden");
+    return;
+  }
+
+  empty.classList.add("hidden");
+
+  // Separar diseñadores y árabes
+  const disenadores = list.filter(p => p.linea === 'disenador');
+  const arabes      = list.filter(p => p.linea !== 'disenador');
+
+  // Agrupar por marca
+  function agruparPorMarca(lista) {
+    const grupos = {};
+    lista.forEach(p => {
+      const marca = p.marca || 'Otros';
+      if (!grupos[marca]) grupos[marca] = [];
+      grupos[marca].push(p);
+    });
+    return grupos;
+  }
+
+  let html = '';
+
+  // Sección diseñadores
+  if (disenadores.length > 0) {
+    const grupos = agruparPorMarca(disenadores);
+    html += `<div class="linea-titulo">✨ Perfumes de Diseñador</div>`;
+    for (const [marca, productos] of Object.entries(grupos)) {
+      html += `<div class="marca-titulo">${marca}</div>`;
+      const cards = await Promise.all(productos.map(cardTemplate));
+      html += `<div class="marca-grid">${cards.join('')}</div>`;
+    }
+  }
+
+  // Sección árabes
+  if (arabes.length > 0) {
+    const grupos = agruparPorMarca(arabes);
+    if (disenadores.length > 0) {
+      html += `<div class="linea-titulo">🌙 Perfumes Árabes</div>`;
+    }
+    for (const [marca, productos] of Object.entries(grupos)) {
+      html += `<div class="marca-titulo">${marca}</div>`;
+      const cards = await Promise.all(productos.map(cardTemplate));
+      html += `<div class="marca-grid">${cards.join('')}</div>`;
+    }
+  }
+
+  grid.innerHTML = html;
 }
 
 async function renderDecants(list) {

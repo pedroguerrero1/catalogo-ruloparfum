@@ -659,14 +659,28 @@
       </div>
       <div class="form-group">
         <label>Precio</label>
-        <input type="number" id="fPrecio" placeholder="150000" />
+        <input type="number" id="fPrecio" placeholder="150000" oninput="calcularDescuento()" />
       </div>
       <div class="form-group">
-        <label>Precio descuento</label>
-        <input type="number" id="fPrecioDescuento" placeholder="Opcional" />
+        <label>Descuento %</label>
+        <input type="number" id="fDescuentoPct" placeholder="Ej: 10" min="0" max="99" oninput="calcularDescuento()" />
+      </div>
+      <div class="form-group full">
+        <label>Precio con descuento</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="number" id="fPrecioDescuento" placeholder="Se calcula solo" style="flex:1" />
+          <button type="button" onclick="resetDescuento()" style="background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:Poppins,sans-serif;">↺ Reset</button>
+        </div>
       </div>
       <div class="form-group">
-        <label>Tipo</label>
+        <label>Línea</label>
+        <select id="fLineaTipo">
+          <option value="arabe">Árabe</option>
+          <option value="disenador">Diseñador</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tipo (EDP/EDT)</label>
         <input type="text" id="fTipo" placeholder="EDP / EDT" />
       </div>
       <div class="form-group">
@@ -981,6 +995,8 @@
       document.getElementById('fMl').value             = p.ml || '';
       document.getElementById('fPrecio').value         = p.precio || '';
       document.getElementById('fPrecioDescuento').value= p.precio_descuento || '';
+      document.getElementById('fDescuentoPct').value   = '';
+      document.getElementById('fLineaTipo').value      = p.linea || 'arabe';
       document.getElementById('fTipo').value           = p.tipo || '';
       document.getElementById('fImagen').value         = p.imagen || '';
       document.getElementById('fDescripcion').value    = p.descripcion || '';
@@ -1006,6 +1022,8 @@
       document.getElementById('fMl').value             = '';
       document.getElementById('fPrecio').value         = '';
       document.getElementById('fPrecioDescuento').value= '';
+      document.getElementById('fDescuentoPct').value   = '';
+      document.getElementById('fLineaTipo').value      = 'arabe';
       document.getElementById('fTipo').value           = 'EDP';
       document.getElementById('fImagen').value         = '';
       document.getElementById('fDescripcion').value    = '';
@@ -1023,7 +1041,22 @@
     editando = null;
   };
 
-  // Preview de imagen
+  // ===== DESCUENTO =====
+  window.calcularDescuento = function() {
+    const precio = parseFloat(document.getElementById('fPrecio').value);
+    const pct    = parseFloat(document.getElementById('fDescuentoPct').value);
+    if (precio && pct && pct > 0 && pct < 100) {
+      const descuento = Math.round(precio * (1 - pct / 100));
+      document.getElementById('fPrecioDescuento').value = descuento;
+    }
+  };
+
+  window.resetDescuento = function() {
+    document.getElementById('fPrecioDescuento').value = '';
+    document.getElementById('fDescuentoPct').value    = '';
+  };
+
+  // ===== GUARDAR =====
   document.getElementById('fImagenFile').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -1076,7 +1109,8 @@
       genero:         document.getElementById('fGenero').value,
       ml:             parseInt(document.getElementById('fMl').value) || 0,
       precio,
-      ...(precioDescuentoVal ? { precio_descuento: precioDescuentoVal } : {}),
+      ...(precioDescuentoVal ? { precio_descuento: precioDescuentoVal } : { precio_descuento: null }),
+      linea:          document.getElementById('fLineaTipo').value,
       tipo:           document.getElementById('fTipo').value.trim(),
       imagen:         imagenUrl,
       descripcion:    document.getElementById('fDescripcion').value.trim(),

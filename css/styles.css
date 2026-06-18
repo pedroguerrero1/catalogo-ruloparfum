@@ -1194,3 +1194,40 @@ body.modal-open #topBtn {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* ===== AGRUPACIÓN POR LÍNEA Y MARCA ===== */
+.linea-titulo {
+  grid-column: 1 / -1;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  padding: 20px 0 8px;
+  border-bottom: 2px solid var(--gold);
+  margin-bottom: 4px;
+  letter-spacing: .04em;
+}
+
+.marca-titulo {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: .15em;
+  padding: 14px 0 2px;
+}
+
+.marca-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 640px) {
+  .marca-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
