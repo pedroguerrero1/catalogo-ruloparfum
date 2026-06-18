@@ -262,7 +262,81 @@
       transition: border-color .2s;
     }
 
+    .producto-card.selected { border-color: var(--gold); background: rgba(200,146,46,.06); }
     .producto-card:active { border-color: rgba(200,146,46,.3); }
+
+    /* Checkbox */
+    .prod-check {
+      width: 22px;
+      height: 22px;
+      accent-color: var(--gold);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    /* Barra de selección masiva */
+    .bulk-bar {
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--panel);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 200;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+    }
+
+    .bulk-bar.visible { display: flex; }
+
+    .bulk-bar-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bulk-bar-info { font-size: 13px; font-weight: 600; color: var(--gold); }
+
+    .bulk-bar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .btn-bulk {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      white-space: nowrap;
+    }
+
+    .btn-bulk-apply  { background: var(--gold); color: white; }
+    .btn-bulk-reset  { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239,68,68,.3); }
+    .btn-bulk-cancel { background: rgba(255,255,255,.06); color: var(--muted); border: 1px solid var(--border); }
+
+    .bulk-pct-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .bulk-pct-row input {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 16px;
+      font-family: 'Poppins', sans-serif;
+      outline: none;
+    }
+
+    .bulk-pct-row input:focus { border-color: var(--gold); }
 
     .producto-card-img {
       width: 56px;
@@ -608,6 +682,13 @@
 
     <input class="admin-search" id="adminSearch" type="search" placeholder="Buscar por nombre o marca..." oninput="filtrarLista()" />
 
+    <!-- Botones de selección rápida -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <button class="btn-bulk btn-bulk-cancel" onclick="seleccionarTodos()" style="font-size:12px;padding:8px 12px;">☑️ Seleccionar todos</button>
+      <button class="btn-bulk btn-bulk-cancel" onclick="seleccionarConDescuento()" style="font-size:12px;padding:8px 12px;">🏷️ Seleccionar con descuento</button>
+      <button class="btn-bulk btn-bulk-cancel" onclick="deseleccionarTodos()" style="font-size:12px;padding:8px 12px;">✕ Deseleccionar</button>
+    </div>
+
     <!-- Mobile: cards -->
     <div class="productos-list" id="productosList"></div>
 
@@ -616,6 +697,7 @@
       <table class="productos-table">
         <thead>
           <tr>
+            <th></th>
             <th>Img</th>
             <th>Nombre</th>
             <th>Marca</th>
@@ -628,6 +710,20 @@
       </table>
     </div>
   </div>
+
+  <!-- Barra de acciones masivas -->
+  <div class="bulk-bar" id="bulkBar">
+    <div class="bulk-bar-top">
+      <span class="bulk-bar-info" id="bulkInfo">0 seleccionados</span>
+      <button class="btn-bulk btn-bulk-cancel" onclick="deseleccionarTodos()">✕ Cancelar</button>
+    </div>
+    <div class="bulk-pct-row">
+      <input type="number" id="bulkPct" placeholder="% de descuento (ej: 10)" min="1" max="99" />
+      <button class="btn-bulk btn-bulk-apply" onclick="aplicarDescuentoMasivo()">Aplicar</button>
+    </div>
+    <button class="btn-bulk btn-bulk-reset" onclick="resetDescuentoMasivo()">↺ Quitar descuento a seleccionados</button>
+  </div>
+
 </div>
 
 <!-- ===== MODAL ===== -->
@@ -829,6 +925,8 @@
     btn.classList.add('active');
     document.getElementById('sectionTitle').textContent = btn.textContent;
     document.getElementById('adminSearch').value = '';
+    seleccionados.clear();
+    document.getElementById('bulkBar').classList.remove('visible');
     cargarProductos();
   };
 
@@ -883,20 +981,28 @@
       const estadoTexto = p.activo === false ? 'Inactivo' : p.stock === false ? 'Sin stock' : 'Con stock';
       const toggleLabel = p.stock === false ? '✅ Activar' : '🚫 Agotar';
       const toggleClass = p.stock === false ? 'on' : '';
+      const tieneDescuento = p.precio_descuento && p.precio_descuento < p.precio;
+      const pct = tieneDescuento ? Math.round((1 - p.precio_descuento / p.precio) * 100) : 0;
 
       return `
-        <div class="producto-card">
+        <div class="producto-card" id="card-${p.id}">
+          <input type="checkbox" class="prod-check" id="chk-${p.id}" onchange="toggleSeleccion(${p.id})" />
           <img class="producto-card-img" data-src="${p.imagen || ''}" src="img/placeholder.webp" onerror="this.src='img/placeholder.webp'" />
           <div class="producto-card-info">
             <div class="producto-card-nombre">${p.nombre}</div>
             <div class="producto-card-meta">
-              <span class="producto-card-precio">$${moneyARS(p.precio)}</span>
+              ${tieneDescuento ? `
+                <span style="text-decoration:line-through;color:var(--muted);font-size:11px;">$${moneyARS(p.precio)}</span>
+                <span class="producto-card-precio">$${moneyARS(p.precio_descuento)}</span>
+                <span style="background:rgba(239,68,68,.15);color:#ef4444;border-radius:999px;font-size:10px;font-weight:700;padding:2px 6px;">-${pct}%</span>
+              ` : `<span class="producto-card-precio">$${moneyARS(p.precio)}</span>`}
               <span class="badge-stock ${estadoLabel}">${estadoTexto}</span>
             </div>
           </div>
           <div class="producto-card-actions">
             <button class="btn-edit" onclick="abrirModal(${p.id})">✏️ Editar</button>
             <button class="btn-toggle ${toggleClass}" onclick="toggleStock(${p.id})">${toggleLabel}</button>
+            ${tieneDescuento ? `<button class="btn-toggle" onclick="resetDescuentoProducto(${p.id})" style="background:rgba(239,68,68,.12);color:#ef4444;border-color:rgba(239,68,68,.3);">↺ Reset</button>` : ''}
           </div>
         </div>`;
     }).join('');
@@ -1039,6 +1145,119 @@
     document.getElementById('modalOverlay').classList.remove('open');
     document.body.style.overflow = '';
     editando = null;
+  };
+
+  // ===== SELECCIÓN MASIVA =====
+  let seleccionados = new Set();
+
+  function actualizarBulkBar() {
+    const bar = document.getElementById('bulkBar');
+    const info = document.getElementById('bulkInfo');
+    if (seleccionados.size > 0) {
+      bar.classList.add('visible');
+      info.textContent = `${seleccionados.size} seleccionado${seleccionados.size > 1 ? 's' : ''}`;
+    } else {
+      bar.classList.remove('visible');
+    }
+  }
+
+  window.toggleSeleccion = function(id) {
+    const card = document.getElementById(`card-${id}`);
+    if (seleccionados.has(id)) {
+      seleccionados.delete(id);
+      card?.classList.remove('selected');
+    } else {
+      seleccionados.add(id);
+      card?.classList.add('selected');
+    }
+    actualizarBulkBar();
+  };
+
+  window.seleccionarTodos = function() {
+    seleccionados.clear();
+    productos.forEach(p => {
+      seleccionados.add(p.id);
+      document.getElementById(`card-${p.id}`)?.classList.add('selected');
+      const chk = document.getElementById(`chk-${p.id}`);
+      if (chk) chk.checked = true;
+    });
+    actualizarBulkBar();
+  };
+
+  window.seleccionarConDescuento = function() {
+    seleccionados.clear();
+    productos.filter(p => p.precio_descuento && p.precio_descuento < p.precio).forEach(p => {
+      seleccionados.add(p.id);
+      document.getElementById(`card-${p.id}`)?.classList.add('selected');
+      const chk = document.getElementById(`chk-${p.id}`);
+      if (chk) chk.checked = true;
+    });
+    actualizarBulkBar();
+  };
+
+  window.deseleccionarTodos = function() {
+    seleccionados.forEach(id => {
+      document.getElementById(`card-${id}`)?.classList.remove('selected');
+      const chk = document.getElementById(`chk-${id}`);
+      if (chk) chk.checked = false;
+    });
+    seleccionados.clear();
+    actualizarBulkBar();
+  };
+
+  window.aplicarDescuentoMasivo = async function() {
+    const pct = parseFloat(document.getElementById('bulkPct').value);
+    if (!pct || pct <= 0 || pct >= 100) {
+      showToast('⚠️ Ingresá un % válido entre 1 y 99');
+      return;
+    }
+    if (seleccionados.size === 0) { showToast('⚠️ No hay productos seleccionados'); return; }
+
+    showToast(`⏳ Aplicando descuento a ${seleccionados.size} productos...`);
+
+    const promesas = Array.from(seleccionados).map(id => {
+      const p = productos.find(x => x.id === id);
+      if (!p) return Promise.resolve();
+      const precioDescuento = Math.round(p.precio * (1 - pct / 100));
+      return updateDoc(doc(db, tabActual, String(id)), { precio_descuento: precioDescuento });
+    });
+
+    try {
+      await Promise.all(promesas);
+      showToast(`✅ Descuento aplicado a ${seleccionados.size} productos`);
+      deseleccionarTodos();
+      document.getElementById('bulkPct').value = '';
+    } catch(e) {
+      showToast('❌ Error al aplicar descuentos');
+    }
+  };
+
+  window.resetDescuentoMasivo = async function() {
+    if (seleccionados.size === 0) { showToast('⚠️ No hay productos seleccionados'); return; }
+
+    showToast(`⏳ Quitando descuento a ${seleccionados.size} productos...`);
+
+    const promesas = Array.from(seleccionados).map(id =>
+      updateDoc(doc(db, tabActual, String(id)), { precio_descuento: null })
+    );
+
+    try {
+      await Promise.all(promesas);
+      showToast(`✅ Descuento quitado a ${seleccionados.size} productos`);
+      deseleccionarTodos();
+    } catch(e) {
+      showToast('❌ Error al quitar descuentos');
+    }
+  };
+
+  // ===== RESET DESCUENTO DIRECTO =====
+  window.resetDescuentoProducto = async function(id) {
+    const p = productos.find(x => x.id === id);
+    if (!p) return;
+    try {
+      await updateDoc(doc(db, tabActual, String(id)), { precio_descuento: null });
+      showToast('↺ Descuento eliminado');
+    } catch(e) { showToast('❌ Error al eliminar descuento'); }
   };
 
   // ===== DESCUENTO =====
