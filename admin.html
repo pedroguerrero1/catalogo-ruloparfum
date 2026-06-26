@@ -805,6 +805,14 @@
           <input type="file" id="fImagenFile" accept="image/*" style="display:none" />
           <div id="imgUploadText">📸 Tocá para subir una foto</div>
         </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+          <div style="flex:1;height:1px;background:var(--border);"></div>
+          <span style="font-size:11px;color:var(--muted);">o pegá una URL</span>
+          <div style="flex:1;height:1px;background:var(--border);"></div>
+        </div>
+        <input type="text" id="fImagenUrl" placeholder="https://firebasestorage... (pegá URL de otra imagen)" 
+               style="margin-top:8px;font-size:13px;" 
+               oninput="previewUrl(this.value)" />
         <div class="img-preview-row" id="imagenPreview" style="display:none">
           <img id="imagenPreviewImg" src="" />
           <div style="flex:1;min-width:0;">
@@ -1126,6 +1134,7 @@
 
     // Limpiar imagen
     document.getElementById('fImagenFile').value = '';
+    document.getElementById('fImagenUrl').value  = '';
     document.getElementById('imagenPreview').style.display = 'none';
     document.getElementById('imgUploadText').textContent = '📸 Tocá para subir una foto';
 
@@ -1226,16 +1235,20 @@
     seleccionados.clear();
     const conDescuento = productos.filter(p => p.precio_descuento && p.precio_descuento < p.precio);
 
-    // Mostrar solo los que tienen descuento
+    if (conDescuento.length === 0) {
+      document.getElementById('productosList').innerHTML = `
+        <div class="loading">
+          <div>Ningún producto tiene descuento activo.</div>
+          <button class="btn-bulk btn-bulk-cancel" onclick="filtrarPorEstado('todos')" style="margin-top:12px;font-size:13px;padding:10px 16px;">← Ver todos</button>
+        </div>`;
+      return;
+    }
+
     await renderLista(conDescuento);
     renderTabla(conDescuento);
 
-    // Seleccionarlos todos
-    conDescuento.forEach(p => {
-      seleccionados.add(p.id);
-    });
+    conDescuento.forEach(p => { seleccionados.add(p.id); });
 
-    // Marcar checkboxes después del render
     setTimeout(() => {
       conDescuento.forEach(p => {
         document.getElementById(`card-${p.id}`)?.classList.add('selected');
@@ -1246,7 +1259,7 @@
     }, 100);
   };
 
-  window.deseleccionarTodos = function() {
+  window.deseleccionarTodos = async function() {
     seleccionados.forEach(id => {
       document.getElementById(`card-${id}`)?.classList.remove('selected');
       const chk = document.getElementById(`chk-${id}`);
@@ -1254,6 +1267,9 @@
     });
     seleccionados.clear();
     actualizarBulkBar();
+    // Volver a mostrar todos
+    await renderLista(productos);
+    renderTabla(productos);
   };
 
   window.aplicarDescuentoMasivo = async function() {
@@ -1326,6 +1342,18 @@
     document.getElementById('fDescuentoPct').value    = '';
   };
 
+  // Preview de URL pegada
+  window.previewUrl = function(url) {
+    if (!url.startsWith('http')) return;
+    const preview = document.getElementById('imagenPreview');
+    preview.style.display = 'flex';
+    document.getElementById('imagenPreviewImg').src = url;
+    document.getElementById('imagenPreviewNombre').textContent = 'URL pegada';
+    document.getElementById('fImagen').value = url;
+    document.getElementById('fImagenFile').value = '';
+    document.getElementById('imgUploadText').textContent = '📸 Tocá para subir una foto';
+  };
+
   // ===== GUARDAR =====
   document.getElementById('fImagenFile').addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -1335,6 +1363,8 @@
     document.getElementById('imagenPreviewImg').src = URL.createObjectURL(file);
     document.getElementById('imagenPreviewNombre').textContent = file.name;
     document.getElementById('imgUploadText').textContent = '✅ Foto seleccionada';
+    // Limpiar URL pegada si se subió archivo
+    document.getElementById('fImagenUrl').value = '';
   });
 
   // ===== GUARDAR =====
@@ -1351,10 +1381,14 @@
     btnSave.textContent = 'Guardando...';
     btnSave.disabled = true;
 
-    const fileInput = document.getElementById('fImagenFile');
-    let imagenUrl = document.getElementById('fImagen').value;
+    const fileInput  = document.getElementById('fImagenFile');
+    const urlPegada  = document.getElementById('fImagenUrl').value.trim();
+    let imagenUrl    = document.getElementById('fImagen').value;
 
-    if (fileInput.files.length > 0) {
+    // Si pegaron una URL, usarla directamente
+    if (urlPegada && urlPegada.startsWith('http')) {
+      imagenUrl = urlPegada;
+    } else if (fileInput.files.length > 0) {
       const file = fileInput.files[0];
       const ext = file.name.split('.').pop();
       const storageKey = `img/${tabActual}/${Date.now()}.${ext}`;
