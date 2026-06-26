@@ -200,6 +200,12 @@
       border-radius: 16px;
       padding: 16px;
       text-align: center;
+      transition: border-color .2s, background .2s;
+    }
+
+    .stat-card.stat-active {
+      border-color: var(--gold);
+      background: rgba(200,146,46,.08);
     }
 
     .stat-card .stat-num { font-size: 26px; font-weight: 700; line-height: 1; }
@@ -801,9 +807,11 @@
         </div>
         <div class="img-preview-row" id="imagenPreview" style="display:none">
           <img id="imagenPreviewImg" src="" />
-          <span id="imagenPreviewNombre"></span>
+          <div style="flex:1;min-width:0;">
+            <span id="imagenPreviewNombre" style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;"></span>
+            <input type="text" id="fImagen" placeholder="URL de imagen" style="font-size:11px;color:var(--muted);background:transparent;border:1px dashed var(--border);border-radius:8px;padding:4px 8px;width:100%;cursor:text;" onclick="this.select()" readonly />
+          </div>
         </div>
-        <input type="hidden" id="fImagen" />
       </div>
       <div class="form-group full">
         <label>Descripción</label>
@@ -888,7 +896,8 @@
       document.getElementById('loginScreen').style.display  = 'none';
       document.getElementById('adminPanel').style.display   = 'block';
       document.getElementById('adminEmail').textContent     = user.email;
-      cargarProductos();
+      // Pequeño delay para que Safari termine de pintar el DOM antes de cargar
+      setTimeout(() => cargarProductos(), 150);
     } else {
       document.getElementById('loginScreen').style.display  = 'flex';
       document.getElementById('adminPanel').style.display   = 'none';
@@ -921,6 +930,7 @@
   // ===== TABS =====
   window.switchTab = function(tab, btn) {
     tabActual = tab;
+    filtroActivo = 'todos';
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('sectionTitle').textContent = btn.textContent;
@@ -944,15 +954,19 @@
 
     unsubscribe = onSnapshot(q, async snap => {
       productos = snap.docs.map(d => d.data()).filter(p => p.id && p.id !== 'temp');
-      await renderLista(productos);
-      renderTabla(productos);
-      renderStats();
+      // requestAnimationFrame asegura que Safari pinte el DOM correctamente
+      requestAnimationFrame(async () => {
+        await renderLista(productos);
+        renderTabla(productos);
+        renderStats();
+      });
     }, error => {
       console.error('onSnapshot error:', error);
-      // Reintento en caso de error
       setTimeout(cargarProductos, 1000);
     });
   }
+
+  let filtroActivo = 'todos';
 
   // ===== STATS =====
   function renderStats() {
@@ -961,13 +975,37 @@
     const sinStock = productos.filter(p => p.stock === false).length;
     const inactivos= productos.filter(p => p.activo === false).length;
 
-    document.getElementById('statsGrid').innerHTML = `
-      <div class="stat-card"><div class="stat-num" style="color:var(--text)">${total}</div><div class="stat-label">Total</div></div>
-      <div class="stat-card"><div class="stat-num" style="color:var(--green)">${conStock}</div><div class="stat-label">Con stock</div></div>
-      <div class="stat-card"><div class="stat-num" style="color:var(--red)">${sinStock}</div><div class="stat-label">Sin stock</div></div>
-      <div class="stat-card"><div class="stat-num" style="color:var(--muted)">${inactivos}</div><div class="stat-label">Inactivos</div></div>
-    `;
+    const cards = [
+      { key: 'todos',    num: total,    label: 'Total',     color: 'var(--text)' },
+      { key: 'constock', num: conStock, label: 'Con stock', color: 'var(--green)' },
+      { key: 'sinstock', num: sinStock, label: 'Sin stock', color: 'var(--red)' },
+      { key: 'inactivo', num: inactivos,label: 'Inactivos', color: 'var(--muted)' },
+    ];
+
+    document.getElementById('statsGrid').innerHTML = cards.map(c => `
+      <div class="stat-card ${filtroActivo === c.key ? 'stat-active' : ''}" 
+           onclick="filtrarPorEstado('${c.key}')" 
+           style="cursor:pointer;">
+        <div class="stat-num" style="color:${c.color}">${c.num}</div>
+        <div class="stat-label">${c.label}</div>
+        ${filtroActivo === c.key ? '<div style="width:20px;height:2px;background:var(--gold);border-radius:1px;margin:6px auto 0;"></div>' : ''}
+      </div>`).join('');
   }
+
+  window.filtrarPorEstado = async function(key) {
+    filtroActivo = key;
+    renderStats();
+    document.getElementById('adminSearch').value = '';
+
+    let lista;
+    if (key === 'todos')    lista = productos;
+    else if (key === 'constock') lista = productos.filter(p => p.activo !== false && p.stock !== false);
+    else if (key === 'sinstock') lista = productos.filter(p => p.stock === false);
+    else if (key === 'inactivo') lista = productos.filter(p => p.activo === false);
+
+    await renderLista(lista);
+    renderTabla(lista);
+  };
 
   async function renderLista(lista) {
     const container = document.getElementById('productosList');
@@ -1184,15 +1222,28 @@
     actualizarBulkBar();
   };
 
-  window.seleccionarConDescuento = function() {
+  window.seleccionarConDescuento = async function() {
     seleccionados.clear();
-    productos.filter(p => p.precio_descuento && p.precio_descuento < p.precio).forEach(p => {
+    const conDescuento = productos.filter(p => p.precio_descuento && p.precio_descuento < p.precio);
+
+    // Mostrar solo los que tienen descuento
+    await renderLista(conDescuento);
+    renderTabla(conDescuento);
+
+    // Seleccionarlos todos
+    conDescuento.forEach(p => {
       seleccionados.add(p.id);
-      document.getElementById(`card-${p.id}`)?.classList.add('selected');
-      const chk = document.getElementById(`chk-${p.id}`);
-      if (chk) chk.checked = true;
     });
-    actualizarBulkBar();
+
+    // Marcar checkboxes después del render
+    setTimeout(() => {
+      conDescuento.forEach(p => {
+        document.getElementById(`card-${p.id}`)?.classList.add('selected');
+        const chk = document.getElementById(`chk-${p.id}`);
+        if (chk) chk.checked = true;
+      });
+      actualizarBulkBar();
+    }, 100);
   };
 
   window.deseleccionarTodos = function() {
@@ -1341,10 +1392,12 @@
     };
 
     try {
+      const scrollPos = window.scrollY;
       await setDoc(doc(db, tabActual, String(id)), data);
       showToast(editando ? '✅ Producto actualizado' : '✅ Producto agregado');
       cerrarModal();
-      cargarProductos();
+      // onSnapshot actualiza la lista, restauramos el scroll después
+      setTimeout(() => window.scrollTo({ top: scrollPos, behavior: 'instant' }), 400);
     } catch(e) {
       showToast('❌ Error al guardar');
       console.error(e);
