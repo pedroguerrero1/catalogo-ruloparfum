@@ -228,7 +228,7 @@ async function renderPerfumes(list) {
   // Sección diseñadores
   if (disenadores.length > 0) {
     const grupos = agruparPorMarca(disenadores);
-    html += `<div class="linea-titulo">✨ Perfumes de Diseñador</div>`;
+    html += `<div class="linea-titulo">✨ Perfumes de Diseñador o Nicho</div>`;
     for (const [marca, productos] of Object.entries(grupos)) {
       html += `<div class="marca-titulo">${marca}</div>`;
       const cards = await Promise.all(productos.map(cardTemplate));
