@@ -725,7 +725,11 @@
     </div>
     <div class="bulk-pct-row">
       <input type="number" id="bulkPct" placeholder="% de descuento (ej: 10)" min="1" max="99" />
-      <button class="btn-bulk btn-bulk-apply" onclick="aplicarDescuentoMasivo()">Aplicar</button>
+      <button class="btn-bulk btn-bulk-apply" onclick="aplicarDescuentoMasivo()">Aplicar %</button>
+    </div>
+    <div class="bulk-pct-row">
+      <input type="number" id="bulkAumento" placeholder="$ a aumentar (ej: 5000)" min="1" />
+      <button class="btn-bulk btn-bulk-apply" onclick="aplicarAumentoMasivo()">+ Precio</button>
     </div>
     <button class="btn-bulk btn-bulk-reset" onclick="resetDescuentoMasivo()">↺ Quitar descuento a seleccionados</button>
   </div>
@@ -1296,6 +1300,33 @@
       document.getElementById('bulkPct').value = '';
     } catch(e) {
       showToast('❌ Error al aplicar descuentos');
+    }
+  };
+
+  window.aplicarAumentoMasivo = async function() {
+    const aumento = parseFloat(document.getElementById('bulkAumento').value);
+    if (!aumento || aumento <= 0) {
+      showToast('⚠️ Ingresá un monto válido');
+      return;
+    }
+    if (seleccionados.size === 0) { showToast('⚠️ No hay productos seleccionados'); return; }
+
+    showToast(`⏳ Actualizando precios de ${seleccionados.size} productos...`);
+
+    const promesas = Array.from(seleccionados).map(id => {
+      const p = productos.find(x => x.id === id);
+      if (!p) return Promise.resolve();
+      const nuevoPrecio = p.precio + aumento;
+      return updateDoc(doc(db, tabActual, String(id)), { precio: nuevoPrecio });
+    });
+
+    try {
+      await Promise.all(promesas);
+      showToast(`✅ Precio aumentado en $${new Intl.NumberFormat('es-AR').format(aumento)} a ${seleccionados.size} productos`);
+      deseleccionarTodos();
+      document.getElementById('bulkAumento').value = '';
+    } catch(e) {
+      showToast('❌ Error al actualizar precios');
     }
   };
 
