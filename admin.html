@@ -1059,8 +1059,17 @@
 
     // Forzar repintado en Safari
     container.style.display = 'none';
-    container.offsetHeight; // fuerza reflow
+    container.offsetHeight;
     container.style.display = 'flex';
+
+    // Remarcar los que estaban seleccionados
+    setTimeout(() => {
+      seleccionados.forEach(id => {
+        document.getElementById(`card-${id}`)?.classList.add('selected');
+        const chk = document.getElementById(`chk-${id}`);
+        if (chk) chk.checked = true;
+      });
+    }, 50);
 
     // Cargar imágenes lazy
     container.querySelectorAll('img[data-src]').forEach(async img => {
