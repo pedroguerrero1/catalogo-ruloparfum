@@ -720,9 +720,11 @@
   <!-- Barra de acciones masivas -->
   <div class="bulk-bar" id="bulkBar">
     <div class="bulk-bar-top">
-      <span class="bulk-bar-info" id="bulkInfo">0 seleccionados</span>
+      <span class="bulk-bar-info" id="bulkInfo" onclick="toggleListaSeleccionados()" style="cursor:pointer;">0 seleccionados ▾</span>
       <button class="btn-bulk btn-bulk-cancel" onclick="deseleccionarTodos()">✕ Cancelar</button>
     </div>
+    <!-- Lista desplegable de seleccionados -->
+    <div id="listaSeleccionados" style="display:none;background:var(--card);border-radius:12px;padding:10px;max-height:160px;overflow-y:auto;font-size:12px;gap:6px;flex-direction:column;"></div>
     <div class="bulk-pct-row">
       <input type="number" id="bulkPct" placeholder="% de descuento (ej: 10)" min="1" max="99" />
       <button class="btn-bulk btn-bulk-apply" onclick="aplicarDescuentoMasivo()">Aplicar %</button>
@@ -1090,8 +1092,10 @@
       const estadoLabel = p.activo === false ? 'inactivo' : p.stock === false ? 'agotado' : 'activo';
       const estadoTexto = p.activo === false ? 'Inactivo' : p.stock === false ? 'Sin stock' : 'Con stock';
       const imgPath = (p.imagen || '').replace(/^\/+/, '');
+      const seleccionado = seleccionados.has(p.id);
       return `
-        <tr>
+        <tr id="row-${p.id}" style="${seleccionado ? 'background:rgba(200,146,46,.08);outline:1px solid var(--gold);' : ''}">
+          <td><input type="checkbox" class="prod-check" id="chk-row-${p.id}" ${seleccionado ? 'checked' : ''} onchange="toggleSeleccion(${p.id})" /></td>
           <td><img class="prod-img" data-src="${imgPath}" src="img/placeholder.webp" /></td>
           <td style="font-weight:600;max-width:200px">${p.nombre}</td>
           <td style="color:var(--muted)">${p.marca || '-'}</td>
@@ -1211,35 +1215,73 @@
   let seleccionados = new Set();
 
   function actualizarBulkBar() {
-    const bar = document.getElementById('bulkBar');
+    const bar  = document.getElementById('bulkBar');
     const info = document.getElementById('bulkInfo');
+    const lista = document.getElementById('listaSeleccionados');
+
     if (seleccionados.size > 0) {
       bar.classList.add('visible');
-      info.textContent = `${seleccionados.size} seleccionado${seleccionados.size > 1 ? 's' : ''}`;
+      info.textContent = `${seleccionados.size} seleccionado${seleccionados.size > 1 ? 's' : ''} ▾`;
+
+      // Actualizar lista de nombres
+      const todos = productos;
+      lista.innerHTML = Array.from(seleccionados).map(id => {
+        const p = todos.find(x => x.id === id);
+        return p ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);">
+          <span style="color:var(--text);">${p.nombre}</span>
+          <span style="color:var(--gold);font-weight:700;">$${moneyARS(p.precio)}</span>
+        </div>` : '';
+      }).join('');
     } else {
       bar.classList.remove('visible');
+      lista.style.display = 'none';
     }
   }
 
+  window.toggleListaSeleccionados = function() {
+    const lista = document.getElementById('listaSeleccionados');
+    lista.style.display = lista.style.display === 'none' ? 'flex' : 'none';
+  };
+
   window.toggleSeleccion = function(id) {
     const card = document.getElementById(`card-${id}`);
+    const row  = document.getElementById(`row-${id}`);
     if (seleccionados.has(id)) {
       seleccionados.delete(id);
       card?.classList.remove('selected');
+      if (row) row.style.background = '';
+      const chkRow = document.getElementById(`chk-row-${id}`);
+      if (chkRow) chkRow.checked = false;
     } else {
       seleccionados.add(id);
       card?.classList.add('selected');
+      if (row) row.style.background = 'rgba(200,146,46,.08)';
+      const chkRow = document.getElementById(`chk-row-${id}`);
+      if (chkRow) chkRow.checked = true;
     }
     actualizarBulkBar();
   };
 
   window.seleccionarTodos = function() {
     seleccionados.clear();
-    productos.forEach(p => {
+
+    // Seleccionar solo los que están visibles según el filtro activo
+    let listaVisible;
+    if (filtroActivo === 'todos')      listaVisible = productos;
+    else if (filtroActivo === 'constock') listaVisible = productos.filter(p => p.activo !== false && p.stock !== false);
+    else if (filtroActivo === 'sinstock') listaVisible = productos.filter(p => p.stock === false);
+    else if (filtroActivo === 'inactivo') listaVisible = productos.filter(p => p.activo === false);
+    else listaVisible = productos;
+
+    listaVisible.forEach(p => {
       seleccionados.add(p.id);
       document.getElementById(`card-${p.id}`)?.classList.add('selected');
       const chk = document.getElementById(`chk-${p.id}`);
       if (chk) chk.checked = true;
+      const row = document.getElementById(`row-${p.id}`);
+      if (row) row.style.background = 'rgba(200,146,46,.08)';
+      const chkRow = document.getElementById(`chk-row-${p.id}`);
+      if (chkRow) chkRow.checked = true;
     });
     actualizarBulkBar();
   };
@@ -1277,10 +1319,13 @@
       document.getElementById(`card-${id}`)?.classList.remove('selected');
       const chk = document.getElementById(`chk-${id}`);
       if (chk) chk.checked = false;
+      const row = document.getElementById(`row-${id}`);
+      if (row) row.style.background = '';
+      const chkRow = document.getElementById(`chk-row-${id}`);
+      if (chkRow) chkRow.checked = false;
     });
     seleccionados.clear();
     actualizarBulkBar();
-    // Volver a mostrar todos
     await renderLista(productos);
     renderTabla(productos);
   };
