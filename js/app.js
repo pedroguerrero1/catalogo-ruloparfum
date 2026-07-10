@@ -148,7 +148,7 @@ window.openModalById = function(id) {
 }
 
 // ===== TEMPLATES =====
-async function cardTemplate(p) {
+function cardTemplate(p) {
   const placeholder = 'img/placeholder.webp';
   const isFav = favoritos.includes(p.id);
   const outOfStock = p.stock === false;
