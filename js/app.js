@@ -38,14 +38,30 @@ async function getImgUrl(path) {
 }
 
 async function cargarColeccion(nombre) {
+  const cacheKey = `rulo_cache_${nombre}`;
   try {
     const q = query(collection(db, nombre), orderBy("id"));
     const snap = await getDocs(q);
-    return snap.docs.map(d => d.data()).filter(p => p.id && p.id !== 'temp');
+    const data = snap.docs.map(d => d.data()).filter(p => p.id && p.id !== 'temp');
+    // Guardar en cache
+    try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch(e) {}
+    return data;
   } catch(e) {
     console.warn(`No se pudo cargar ${nombre}:`, e);
+    // Si falla, intentar desde cache
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) return JSON.parse(cached);
+    } catch(e2) {}
     return [];
   }
+}
+
+function cargarDesdeCache(nombre) {
+  try {
+    const cached = localStorage.getItem(`rulo_cache_${nombre}`);
+    return cached ? JSON.parse(cached) : null;
+  } catch(e) { return null; }
 }
 
 // ===== CONSTANTES =====
@@ -136,13 +152,12 @@ async function cardTemplate(p) {
   const placeholder = 'img/placeholder.webp';
   const isFav = favoritos.includes(p.id);
   const outOfStock = p.stock === false;
-  const imgUrl = await getImgUrl(p.imagen);
 
   return `
-    <article class="card ${outOfStock ? 'out-of-stock' : ''}" onclick="openModalById(${p.id})">
+    <article class="card ${outOfStock ? 'out-of-stock' : ''}" onclick="openModalById(${p.id})" data-img="${p.imagen || ''}">
       <div class="thumb">
         ${outOfStock ? '<div class="badge-out">Agotado</div>' : ''}
-        <img src="${imgUrl}" alt="${p.nombre}" onerror="this.onerror=null; this.src='${placeholder}'">
+        <img src="${placeholder}" alt="${p.nombre}" class="lazy-img" onerror="this.onerror=null; this.src='${placeholder}'">
       </div>
       <div class="content">
         <div class="card__info">
@@ -179,6 +194,15 @@ async function cardTemplate(p) {
     </article>`;
 }
 
+function cargarImagenesLazy(container) {
+  container.querySelectorAll('.lazy-img').forEach(async img => {
+    const article = img.closest('[data-img]');
+    if (!article) return;
+    const url = await getImgUrl(article.dataset.img);
+    if (url) img.src = url;
+  });
+}
+
 async function categoryTemplate(c) {
   const imgUrl = await getImgUrl(c.imagen);
   return `
@@ -208,11 +232,9 @@ async function renderPerfumes(list) {
 
   empty.classList.add("hidden");
 
-  // Separar diseñadores y árabes
   const disenadores = list.filter(p => p.linea === 'disenador');
   const arabes      = list.filter(p => p.linea !== 'disenador');
 
-  // Agrupar por marca
   function agruparPorMarca(lista) {
     const grupos = {};
     lista.forEach(p => {
@@ -225,37 +247,33 @@ async function renderPerfumes(list) {
 
   let html = '';
 
-  // Sección diseñadores
   if (disenadores.length > 0) {
     const grupos = agruparPorMarca(disenadores);
-    html += `<div class="linea-titulo">✨ Perfumes de Diseñador o Nicho</div>`;
-    for (const [marca, productos] of Object.entries(grupos)) {
+    html += `<div class="linea-titulo">✨ Perfumes de Diseñador / Nicho</div>`;
+    for (const [marca, prods] of Object.entries(grupos)) {
       html += `<div class="marca-titulo">${marca}</div>`;
-      const cards = await Promise.all(productos.map(cardTemplate));
-      html += `<div class="marca-grid">${cards.join('')}</div>`;
+      html += `<div class="marca-grid">${prods.map(cardTemplate).join('')}</div>`;
     }
   }
 
-  // Sección árabes
   if (arabes.length > 0) {
     const grupos = agruparPorMarca(arabes);
-    if (disenadores.length > 0) {
-      html += `<div class="linea-titulo">🌙 Perfumes Árabes</div>`;
-    }
-    for (const [marca, productos] of Object.entries(grupos)) {
+    if (disenadores.length > 0) html += `<div class="linea-titulo">🌙 Perfumes Árabes</div>`;
+    for (const [marca, prods] of Object.entries(grupos)) {
       html += `<div class="marca-titulo">${marca}</div>`;
-      const cards = await Promise.all(productos.map(cardTemplate));
-      html += `<div class="marca-grid">${cards.join('')}</div>`;
+      html += `<div class="marca-grid">${prods.map(cardTemplate).join('')}</div>`;
     }
   }
 
   grid.innerHTML = html;
+  cargarImagenesLazy(grid);
 }
 
 async function renderDecants(list) {
   if (decantsGrid) {
-    const cards = await Promise.all(list.filter(p => p.activo !== false).map(cardTemplate));
-    decantsGrid.innerHTML = cards.join("");
+    const filtered = list.filter(p => p.activo !== false);
+    decantsGrid.innerHTML = filtered.map(cardTemplate).join("");
+    cargarImagenesLazy(decantsGrid);
   }
 }
 
@@ -264,15 +282,16 @@ async function renderPromos(list) {
   const activos = list.filter(p => p.activo !== false);
   if (section) section.style.display = activos.length === 0 ? "none" : "";
   if (promosGrid) {
-    const cards = await Promise.all(activos.map(cardTemplate));
-    promosGrid.innerHTML = cards.join("");
+    promosGrid.innerHTML = activos.map(cardTemplate).join("");
+    cargarImagenesLazy(promosGrid);
   }
 }
 
 async function renderDesodorantes(list) {
   if (desodorantsGrid) {
-    const cards = await Promise.all(list.filter(p => p.activo !== false).map(cardTemplate));
-    desodorantsGrid.innerHTML = cards.join("");
+    const filtered = list.filter(p => p.activo !== false);
+    desodorantsGrid.innerHTML = filtered.map(cardTemplate).join("");
+    cargarImagenesLazy(desodorantsGrid);
   }
 }
 
@@ -289,7 +308,8 @@ async function openModal(p) {
   modal.classList.remove("hidden");
   document.body.classList.add("modal-open");
   document.body.style.overflow = "hidden";
-  modalImg.src = await getImgUrl(p.imagen);
+  modalImg.src = 'img/placeholder.webp';
+  getImgUrl(p.imagen).then(url => { if (url) modalImg.src = url; });
   modalTitle.textContent = p.nombre;
 
   if (p.stock === false) {
@@ -335,7 +355,7 @@ async function applyFilters() {
   if (sortFn) {
     listP.sort(sortFn);
   } else {
-    listP.sort((a, b) => b.precio - a.precio); // Por defecto: más caros primero
+    listP.sort((a, b) => b.precio - a.precio);
   }
   await renderPerfumes(listP);
 
@@ -344,20 +364,20 @@ async function applyFilters() {
   const listDe = desodorantes.filter(p => p.activo !== false && matchesQuery(p));
 
   if (decantsGrid) {
-    const cards = await Promise.all(listD.map(cardTemplate));
-    decantsGrid.innerHTML = cards.join("");
+    decantsGrid.innerHTML = listD.map(cardTemplate).join("");
+    cargarImagenesLazy(decantsGrid);
     const sec = document.getElementById("decants");
     if (sec) sec.style.display = listD.length === 0 && q ? "none" : "";
   }
   if (promosGrid) {
-    const cards = await Promise.all(listPr.map(cardTemplate));
-    promosGrid.innerHTML = cards.join("");
+    promosGrid.innerHTML = listPr.map(cardTemplate).join("");
+    cargarImagenesLazy(promosGrid);
     const promosSec = document.getElementById("promos");
     if (promosSec) promosSec.style.display = listPr.length === 0 ? "none" : "";
   }
   if (desodorantsGrid) {
-    const cards = await Promise.all(listDe.map(cardTemplate));
-    desodorantsGrid.innerHTML = cards.join("");
+    desodorantsGrid.innerHTML = listDe.map(cardTemplate).join("");
+    cargarImagenesLazy(desodorantsGrid);
     const sec = document.getElementById("desodorantes");
     if (sec) sec.style.display = listDe.length === 0 && q ? "none" : "";
   }
@@ -396,7 +416,7 @@ window.toggleCart = function() {
   if (drawer.classList.contains("is-open")) renderCartItems();
 }
 
-async function renderCartItems() {
+function renderCartItems() {
   const container  = document.getElementById("cartItems");
   const totalSumEl = document.getElementById("cartTotalSum");
   if (!container) return;
@@ -408,20 +428,20 @@ async function renderCartItems() {
     if(totalSumEl) totalSumEl.innerText = "$0";
     return;
   }
-  const items = await Promise.all(seleccionados.map(async p => {
+  const items = seleccionados.map(p => {
     total += Number(p.precio_descuento || p.precio) || 0;
-    const imgUrl = await getImgUrl(p.imagen);
     return `
       <div class="cart-item">
-        <img src="${imgUrl}" onerror="this.src='img/placeholder.webp'">
+        <img src="img/placeholder.webp" data-img="${p.imagen || ''}" class="lazy-img" onerror="this.src='img/placeholder.webp'">
         <div class="cart-item-info">
           <div>${p.nombre}</div>
           <div class="price">$${moneyARS(p.precio_descuento || p.precio)}</div>
         </div>
         <button onclick="toggleFav(${p.id}, event)" style="background:none;border:none;color:#ff4444;font-size:18px;cursor:pointer;">✕</button>
       </div>`;
-  }));
+  });
   container.innerHTML = items.join("");
+  cargarImagenesLazy(container);
   if(totalSumEl) totalSumEl.innerText = `$${moneyARS(total)}`;
 }
 
@@ -436,19 +456,43 @@ function updateFavUI() {
 
 // ===== INIT =====
 async function init() {
-  if (grid) grid.innerHTML = `<div style="color:var(--muted);padding:20px;grid-column:1/-1">Cargando productos...</div>`;
+  // 1. Mostrar desde cache inmediatamente si existe
+  const cachePerfumes     = cargarDesdeCache('perfumes');
+  const cacheDecants      = cargarDesdeCache('decants');
+  const cachePromos       = cargarDesdeCache('promos');
+  const cacheDesodorantes = cargarDesdeCache('desodorantes');
 
-  [perfumes, decants, promos, desodorantes] = await Promise.all([
+  if (cachePerfumes) {
+    perfumes     = cachePerfumes;
+    decants      = cacheDecants      || [];
+    promos       = cachePromos       || [];
+    desodorantes = cacheDesodorantes || [];
+    await renderDecants(decants);
+    await renderPromos(promos);
+    await renderDesodorantes(desodorantes);
+    await applyFilters();
+    updateFavUI();
+  } else {
+    if (grid) grid.innerHTML = `<div style="color:var(--muted);padding:20px;grid-column:1/-1">Cargando productos...</div>`;
+  }
+
+  // 2. Cargar desde Firestore en segundo plano y actualizar
+  try {
+    const resS = await fetch("data/secciones.json");
+    if (resS.ok) renderCategories(await resS.json());
+  } catch(e) {}
+
+  const [p, d, pr, de] = await Promise.all([
     cargarColeccion('perfumes'),
     cargarColeccion('decants'),
     cargarColeccion('promos'),
     cargarColeccion('desodorantes')
   ]);
 
-  try {
-    const resS = await fetch("data/secciones.json");
-    if (resS.ok) renderCategories(await resS.json());
-  } catch(e) {}
+  perfumes     = p;
+  decants      = d;
+  promos       = pr;
+  desodorantes = de;
 
   await renderDecants(decants);
   await renderPromos(promos);
@@ -456,7 +500,7 @@ async function init() {
   await applyFilters();
   updateFavUI();
 
-  // Si la grilla quedó vacía, reintentar una vez
+  // Reintentar si la grilla quedó vacía
   if (grid && grid.children.length === 0 && perfumes.length > 0) {
     await applyFilters();
   }
