@@ -10,6 +10,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
  
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#c8922e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Rulo Parfum" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
  
@@ -89,6 +95,7 @@
     <a href="#decants">Decants</a>
     <a href="#promos">Promos</a>
     <a href="#desodorantes">Desodorantes</a>
+    <a href="#bodysplash">Body Splash</a>
   </nav>
 </header>
  
@@ -123,6 +130,11 @@
     <h2 class="section-title">Desodorantes</h2>
     <div id="desodorantsGrid" class="grid"></div>
   </section>
+
+  <section id="bodysplash" class="section-block">
+    <h2 class="section-title">Body Splash</h2>
+    <div id="bodysplashGrid" class="grid"></div>
+  </section>
  
   <div class="store-status">
     🟢 Atención por WhatsApp activa
@@ -140,7 +152,7 @@
 <button id="topBtn" type="button" aria-label="Volver arriba">↑</button>
  
 <a class="wa-float" href="https://wa.me/5493535669706" target="_blank" aria-label="WhatsApp">
-  <img src="https://firebasestorage.googleapis.com/v0/b/ruloparfum.firebasestorage.app/o/img%2Fwhatsapp.svg?alt=media&token=d8e1bff1-eadb-4283-aff1-a4c0180a6ef9" alt="WhatsApp">
+  <img src="img/whatsapp.svg" alt="WhatsApp">
 </a>
  
 <!-- Botón flotante del carrito (izquierda) -->
@@ -173,5 +185,12 @@
 </div>
 
 <script type="module" src="js/app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js');
+    });
+  }
+</script>
 </body>
 </html>

@@ -89,6 +89,7 @@ const grid            = document.getElementById("grid");
 const decantsGrid     = document.getElementById("decantsGrid");
 const promosGrid      = document.getElementById("promosGrid");
 const desodorantsGrid = document.getElementById("desodorantsGrid");
+const bodysplashGrid  = document.getElementById("bodysplashGrid");
 const search          = document.getElementById("search");
 const filter          = document.getElementById("filter");
 const empty           = document.getElementById("empty");
@@ -97,6 +98,7 @@ let perfumes     = [];
 let decants      = [];
 let promos       = [];
 let desodorantes = [];
+let bodysplash   = [];
 let favoritos    = JSON.parse(localStorage.getItem('rulo_favs')) || [];
 
 // ===== TOAST =====
@@ -125,7 +127,7 @@ window.toggleFav = function(id, event) {
   if (!agregado) { favoritos.splice(index, 1); }
   else { favoritos.push(id); }
   localStorage.setItem('rulo_favs', JSON.stringify(favoritos));
-  const todos = [...perfumes, ...decants, ...promos, ...desodorantes];
+  const todos = [...perfumes, ...decants, ...promos, ...desodorantes, ...bodysplash];
   const p = todos.find(x => x.id === id);
   if (p) showToast(p.nombre, agregado);
   updateFavUI();
@@ -133,7 +135,7 @@ window.toggleFav = function(id, event) {
 }
 
 window.sendAllFavs = function() {
-  const todos = [...perfumes, ...decants, ...promos, ...desodorantes];
+  const todos = [...perfumes, ...decants, ...promos, ...desodorantes, ...bodysplash];
   const seleccionados = todos.filter(p => favoritos.includes(p.id));
   let listaItems = "";
   seleccionados.forEach(p => { listaItems += `- ${p.nombre} (${p.ml}ml)\n`; });
@@ -142,7 +144,7 @@ window.sendAllFavs = function() {
 }
 
 window.openModalById = function(id) {
-  const todos = [...perfumes, ...decants, ...promos, ...desodorantes];
+  const todos = [...perfumes, ...decants, ...promos, ...desodorantes, ...bodysplash];
   const p = todos.find(x => x.id === id);
   if (p) openModal(p);
 }
@@ -295,6 +297,16 @@ async function renderDesodorantes(list) {
   }
 }
 
+async function renderBodysplash(list) {
+  const section = document.getElementById("bodysplash");
+  const activos = list.filter(p => p.activo !== false);
+  if (section) section.style.display = activos.length === 0 ? "none" : "";
+  if (bodysplashGrid) {
+    bodysplashGrid.innerHTML = activos.map(cardTemplate).join("");
+    cargarImagenesLazy(bodysplashGrid);
+  }
+}
+
 // ===== MODAL =====
 const modal       = document.getElementById("modal");
 const modalImg    = document.getElementById("modalImg");
@@ -362,6 +374,7 @@ async function applyFilters() {
   const listD  = decants.filter(p => p.activo !== false && matchesQuery(p));
   const listPr = promos.filter(p => p.activo !== false && matchesQuery(p));
   const listDe = desodorantes.filter(p => p.activo !== false && matchesQuery(p));
+  const listBs = bodysplash.filter(p => p.activo !== false && matchesQuery(p));
 
   if (decantsGrid) {
     decantsGrid.innerHTML = listD.map(cardTemplate).join("");
@@ -381,8 +394,14 @@ async function applyFilters() {
     const sec = document.getElementById("desodorantes");
     if (sec) sec.style.display = listDe.length === 0 && q ? "none" : "";
   }
+  if (bodysplashGrid) {
+    bodysplashGrid.innerHTML = listBs.map(cardTemplate).join("");
+    cargarImagenesLazy(bodysplashGrid);
+    const sec = document.getElementById("bodysplash");
+    if (sec) sec.style.display = listBs.length === 0 && q ? "none" : "";
+  }
 
-  const totalResultados = listP.length + listD.length + listPr.length + listDe.length;
+  const totalResultados = listP.length + listD.length + listPr.length + listDe.length + listBs.length;
   empty.classList.toggle("hidden", totalResultados !== 0 || !q);
 }
 
@@ -420,7 +439,7 @@ function renderCartItems() {
   const container  = document.getElementById("cartItems");
   const totalSumEl = document.getElementById("cartTotalSum");
   if (!container) return;
-  const todos = [...perfumes, ...decants, ...promos, ...desodorantes];
+  const todos = [...perfumes, ...decants, ...promos, ...desodorantes, ...bodysplash];
   const seleccionados = todos.filter(p => favoritos.includes(p.id));
   let total = 0;
   if (seleccionados.length === 0) {
@@ -461,15 +480,18 @@ async function init() {
   const cacheDecants      = cargarDesdeCache('decants');
   const cachePromos       = cargarDesdeCache('promos');
   const cacheDesodorantes = cargarDesdeCache('desodorantes');
+  const cacheBodysplash   = cargarDesdeCache('bodysplash');
 
   if (cachePerfumes) {
     perfumes     = cachePerfumes;
     decants      = cacheDecants      || [];
     promos       = cachePromos       || [];
     desodorantes = cacheDesodorantes || [];
+    bodysplash   = cacheBodysplash   || [];
     await renderDecants(decants);
     await renderPromos(promos);
     await renderDesodorantes(desodorantes);
+    await renderBodysplash(bodysplash);
     await applyFilters();
     updateFavUI();
   } else {
@@ -482,21 +504,24 @@ async function init() {
     if (resS.ok) renderCategories(await resS.json());
   } catch(e) {}
 
-  const [p, d, pr, de] = await Promise.all([
+  const [p, d, pr, de, bs] = await Promise.all([
     cargarColeccion('perfumes'),
     cargarColeccion('decants'),
     cargarColeccion('promos'),
-    cargarColeccion('desodorantes')
+    cargarColeccion('desodorantes'),
+    cargarColeccion('bodysplash')
   ]);
 
   perfumes     = p;
   decants      = d;
   promos       = pr;
   desodorantes = de;
+  bodysplash   = bs;
 
   await renderDecants(decants);
   await renderPromos(promos);
   await renderDesodorantes(desodorantes);
+  await renderBodysplash(bodysplash);
   await applyFilters();
   updateFavUI();
 
