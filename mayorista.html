@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rulo Parfum | Catálogo Mayorista</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .mayorista-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #c8922e, #d4af55);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .mayorista-aviso {
+      background: rgba(200,146,46,.1);
+      border: 1px solid rgba(200,146,46,.3);
+      border-radius: 16px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: var(--gold);
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="modal" class="modal hidden" aria-hidden="true">
+  <div class="modal__backdrop" data-close="true"></div>
+  <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal__close" id="modalClose" aria-label="Cerrar">✕</button>
+    <div class="modal__media">
+      <img id="modalImg" src="" alt="Perfume" />
+    </div>
+    <div class="modal__content">
+      <div class="modal__top">
+        <h2 id="modalTitle" class="modal__title"></h2>
+        <div id="modalPrice" class="modal__price"></div>
+      </div>
+      <div id="modalBadges" class="modal__badges"></div>
+      <p id="modalDesc" class="modal__desc"></p>
+      <div class="notas">
+        <p><strong>Salida:</strong> <span id="notas-salida"></span></p>
+        <p><strong>Corazón:</strong> <span id="notas-corazon"></span></p>
+        <p><strong>Fondo:</strong> <span id="notas-fondo"></span></p>
+      </div>
+      <a id="modalWa" class="btn btn--wa" href="#" target="_blank" rel="noopener">
+        Consultar por WhatsApp
+      </a>
+    </div>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="brand">
+    <img src="https://firebasestorage.googleapis.com/v0/b/ruloparfum.firebasestorage.app/o/img%2Flogo.png?alt=media&token=ec2aeaac-160a-43d4-9ed0-3611abc172b1" alt="Rulo BarberShop" class="logo logo--icon" />
+    <div>
+      <div class="brandName">RULO Parfum <span class="mayorista-badge">Mayorista</span></div>
+      <div class="brandSub">BarberShop • Catálogo Mayorista</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <input id="search" class="input" type="search" placeholder="Buscar perfume..." />
+    <div class="actions-row">
+      <button class="menu-toggle" id="menuToggle">Categoría</button>
+      <div class="select-wrap">
+        <select id="filter" class="select">
+          <option value="all">Todos</option>
+          <option value="hombre">Hombre</option>
+          <option value="mujer">Mujer</option>
+          <option value="unisex">Unisex</option>
+          <option value="asc">Precio: Menor a mayor</option>
+          <option value="desc">Precio: Mayor a menor</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <nav class="mobile-menu" id="mobileMenu">
+    <a href="#perfumes">Perfumes</a>
+    <a href="#decants">Decants</a>
+    <a href="#promos">Promos</a>
+    <a href="#desodorantes">Desodorantes</a>
+    <a href="#bodysplash">Body Splash</a>
+  </nav>
+</header>
+
+<main class="container">
+  <section class="hero">
+    <h1>Catálogo Mayorista</h1>
+    <p class="subtitle">Precios mayoristas exclusivos<br>Consultá disponibilidad por WhatsApp</p>
+  </section>
+
+  <div class="mayorista-aviso">
+    🔒 Este catálogo es exclusivo para clientes mayoristas. Los precios son confidenciales.
+  </div>
+
+  <section id="perfumes">
+    <h2 class="section-title">Perfumes</h2>
+    <section id="grid" class="grid"></section>
+  </section>
+
+  <section id="decants" class="section-block">
+    <h2 class="section-title">Decants</h2>
+    <div id="decantsGrid" class="grid"></div>
+  </section>
+
+  <section id="promos" class="section-block">
+    <h2 class="section-title">Promociones</h2>
+    <div id="promosGrid" class="grid"></div>
+  </section>
+
+  <section id="desodorantes" class="section-block">
+    <h2 class="section-title">Desodorantes</h2>
+    <div id="desodorantsGrid" class="grid"></div>
+  </section>
+
+  <section id="bodysplash" class="section-block">
+    <h2 class="section-title">Body Splash</h2>
+    <div id="bodysplashGrid" class="grid"></div>
+  </section>
+
+  <div class="store-status">🟢 Atención por WhatsApp activa</div>
+
+  <div id="empty" class="empty hidden">
+    <p>No se encontraron productos con esos filtros.</p>
+  </div>
+</main>
+
+<footer class="footer">
+  <p>© Rulo BarberShop — Catálogo Mayorista Exclusivo</p>
+</footer>
+
+<button id="topBtn" type="button" aria-label="Volver arriba">↑</button>
+
+<a class="wa-float" href="https://wa.me/5493535669706" target="_blank" aria-label="WhatsApp">
+  <img src="img/whatsapp.svg" alt="WhatsApp">
+</a>
+
+<div id="favButton" class="fav-float-new" onclick="toggleCart()" style="display:none;">
+  <span class="cart-icon-main">🛒</span>
+  <div class="fav-count" id="favCount">0</div>
+</div>
+
+<div id="cartDrawer" class="cart-drawer">
+  <div class="cart-drawer__backdrop" onclick="toggleCart()"></div>
+  <div class="cart-drawer__content">
+    <div class="cart-header">
+      <h3>Mi Pedido Mayorista 🛒</h3>
+      <button onclick="toggleCart()" class="close-cart">✕</button>
+    </div>
+    <div id="cartItems" class="cart-items"></div>
+    <div class="cart-footer">
+      <div id="avisoMinimo" style="display:none;font-size:12px;color:#ef4444;margin-bottom:10px;text-align:center;"></div>
+      <div class="cart-total">
+        <span>Total estimado:</span>
+        <span id="cartTotalSum">$0</span>
+      </div>
+      <button id="btnEnviarPedido" class="btn btn--wa-order" onclick="sendAllFavs()" disabled style="opacity:.5;">
+        Enviar pedido por WhatsApp
+      </button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/mayorista.js"></script>
+</body>
+</html>

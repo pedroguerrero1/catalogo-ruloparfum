@@ -731,8 +731,9 @@
       <button class="btn-bulk btn-bulk-apply" onclick="aplicarDescuentoMasivo()">Aplicar %</button>
     </div>
     <div class="bulk-pct-row">
-      <input type="number" id="bulkAumento" placeholder="$ a aumentar (ej: 5000)" min="1" />
-      <button class="btn-bulk btn-bulk-apply" onclick="aplicarAumentoMasivo()">+ Precio</button>
+      <input type="number" id="bulkAumento" placeholder="$ a modificar (ej: 5000)" min="1" />
+      <button class="btn-bulk btn-bulk-apply" onclick="aplicarAumentoMasivo(1)">+ Precio</button>
+      <button class="btn-bulk" onclick="aplicarAumentoMasivo(-1)" style="background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.3);">- Precio</button>
     </div>
     <button class="btn-bulk btn-bulk-reset" onclick="resetDescuentoMasivo()">↺ Quitar descuento a seleccionados</button>
   </div>
@@ -780,6 +781,10 @@
           <input type="number" id="fPrecioDescuento" placeholder="Se calcula solo" style="flex:1" />
           <button type="button" onclick="resetDescuento()" style="background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:Poppins,sans-serif;">↺ Reset</button>
         </div>
+      </div>
+      <div class="form-group">
+        <label>Precio mayorista</label>
+        <input type="number" id="fPrecioMayorista" placeholder="Opcional" />
       </div>
       <div class="form-group">
         <label>Línea</label>
@@ -1167,6 +1172,7 @@
       document.getElementById('fPrecio').value         = p.precio || '';
       document.getElementById('fPrecioDescuento').value= p.precio_descuento || '';
       document.getElementById('fDescuentoPct').value   = '';
+      document.getElementById('fPrecioMayorista').value= p.precio_mayorista || '';
       document.getElementById('fLineaTipo').value      = p.linea || 'arabe';
       document.getElementById('fTipo').value           = p.tipo || '';
       document.getElementById('fImagen').value         = p.imagen || '';
@@ -1194,6 +1200,7 @@
       document.getElementById('fPrecio').value         = '';
       document.getElementById('fPrecioDescuento').value= '';
       document.getElementById('fDescuentoPct').value   = '';
+      document.getElementById('fPrecioMayorista').value= '';
       document.getElementById('fLineaTipo').value      = 'arabe';
       document.getElementById('fTipo').value           = 'EDP';
       document.getElementById('fImagen').value         = '';
@@ -1358,26 +1365,28 @@
     }
   };
 
-  window.aplicarAumentoMasivo = async function() {
-    const aumento = parseFloat(document.getElementById('bulkAumento').value);
-    if (!aumento || aumento <= 0) {
+  window.aplicarAumentoMasivo = async function(signo = 1) {
+    const monto = parseFloat(document.getElementById('bulkAumento').value);
+    if (!monto || monto <= 0) {
       showToast('⚠️ Ingresá un monto válido');
       return;
     }
     if (seleccionados.size === 0) { showToast('⚠️ No hay productos seleccionados'); return; }
 
+    const aumento = monto * signo;
+    const accion  = signo > 0 ? 'aumentado' : 'reducido';
     showToast(`⏳ Actualizando precios de ${seleccionados.size} productos...`);
 
     const promesas = Array.from(seleccionados).map(id => {
       const p = productos.find(x => x.id === id);
       if (!p) return Promise.resolve();
-      const nuevoPrecio = p.precio + aumento;
+      const nuevoPrecio = Math.max(0, p.precio + aumento);
       return updateDoc(doc(db, tabActual, String(id)), { precio: nuevoPrecio });
     });
 
     try {
       await Promise.all(promesas);
-      showToast(`✅ Precio aumentado en $${new Intl.NumberFormat('es-AR').format(aumento)} a ${seleccionados.size} productos`);
+      showToast(`✅ Precio ${accion} en $${new Intl.NumberFormat('es-AR').format(monto)} a ${seleccionados.size} productos`);
       deseleccionarTodos();
       document.getElementById('bulkAumento').value = '';
     } catch(e) {
@@ -1490,25 +1499,27 @@
     }
 
     const id = editando || Date.now();
-    const precioDescuentoVal = parseFloat(document.getElementById('fPrecioDescuento').value);
+    const precioDescuentoVal  = parseFloat(document.getElementById('fPrecioDescuento').value);
+    const precioMayoristaVal  = parseFloat(document.getElementById('fPrecioMayorista').value);
 
     const data = {
       id,
       nombre,
-      marca:          document.getElementById('fMarca').value.trim(),
-      genero:         document.getElementById('fGenero').value,
-      ml:             parseInt(document.getElementById('fMl').value) || 0,
+      marca:             document.getElementById('fMarca').value.trim(),
+      genero:            document.getElementById('fGenero').value,
+      ml:                parseInt(document.getElementById('fMl').value) || 0,
       precio,
-      ...(precioDescuentoVal ? { precio_descuento: precioDescuentoVal } : { precio_descuento: null }),
-      linea:          document.getElementById('fLineaTipo').value,
-      tipo:           document.getElementById('fTipo').value.trim(),
-      imagen:         imagenUrl,
-      descripcion:    document.getElementById('fDescripcion').value.trim(),
-      notas_salida:   document.getElementById('fSalida').value.trim(),
-      notas_corazon:  document.getElementById('fCorazon').value.trim(),
-      notas_fondo:    document.getElementById('fFondo').value.trim(),
-      stock:          document.getElementById('fStock').value === 'true',
-      activo:         document.getElementById('fActivo').value === 'true',
+      ...(precioDescuentoVal  ? { precio_descuento:  precioDescuentoVal  } : { precio_descuento:  null }),
+      ...(precioMayoristaVal  ? { precio_mayorista:  precioMayoristaVal  } : { precio_mayorista:  null }),
+      linea:             document.getElementById('fLineaTipo').value,
+      tipo:              document.getElementById('fTipo').value.trim(),
+      imagen:            imagenUrl,
+      descripcion:       document.getElementById('fDescripcion').value.trim(),
+      notas_salida:      document.getElementById('fSalida').value.trim(),
+      notas_corazon:     document.getElementById('fCorazon').value.trim(),
+      notas_fondo:       document.getElementById('fFondo').value.trim(),
+      stock:             document.getElementById('fStock').value === 'true',
+      activo:            document.getElementById('fActivo').value === 'true',
     };
 
     try {

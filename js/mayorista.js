@@ -1,0 +1,476 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDBxkSDdPDlE_7mekIvl_GKzgC_GXzCcuw",
+  authDomain: "ruloparfum.firebaseapp.com",
+  projectId: "ruloparfum",
+  storageBucket: "ruloparfum.firebasestorage.app",
+  messagingSenderId: "167849199505",
+  appId: "1:167849199505:web:d5822af67e5f2024aa3c30"
+};
+
+const app     = initializeApp(firebaseConfig);
+const db      = getFirestore(app);
+const storage = getStorage(app);
+
+const WHATSAPP_NUMBER = "5493535669706";
+const MINIMO_UNIDADES = 8;
+
+const urlCache = {};
+
+async function getImgUrl(path) {
+  if (!path) return 'img/placeholder.webp';
+  if (path.startsWith('http')) return path;
+  if (urlCache[path]) return urlCache[path];
+  try {
+    const clean = path.replace(/^\/+/, '');
+    const url = await Promise.race([
+      getDownloadURL(ref(storage, clean)),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000))
+    ]);
+    urlCache[path] = url;
+    return url;
+  } catch(e) { return path.replace(/^\/+/, ''); }
+}
+
+async function cargarColeccion(nombre) {
+  try {
+    const q = query(collection(db, nombre), orderBy("id"));
+    const snap = await getDocs(q);
+    return snap.docs
+      .map(d => d.data())
+      .filter(p => p.id && p.id !== 'temp' && p.activo !== false && p.precio_mayorista);
+  } catch(e) {
+    console.warn(`No se pudo cargar ${nombre}:`, e);
+    return [];
+  }
+}
+
+function moneyARS(n) {
+  return new Intl.NumberFormat("es-AR").format(n);
+}
+
+function capitalize(str) {
+  if (!str) return "-";
+  return str.split(",").map(s => {
+    const t = s.trim();
+    return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+  }).join(", ");
+}
+
+function waLink(p) {
+  const msg = `Hola! Vi en el catálogo mayorista el *${p.nombre}* (${p.ml}ml) por $${moneyARS(p.precio_mayorista)}. ¿Lo tenés disponible?`;
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+}
+
+const grid            = document.getElementById("grid");
+const decantsGrid     = document.getElementById("decantsGrid");
+const promosGrid      = document.getElementById("promosGrid");
+const desodorantsGrid = document.getElementById("desodorantsGrid");
+const bodysplashGrid  = document.getElementById("bodysplashGrid");
+const search          = document.getElementById("search");
+const filter          = document.getElementById("filter");
+const empty           = document.getElementById("empty");
+
+let perfumes     = [];
+let decants      = [];
+let promos       = [];
+let desodorantes = [];
+let bodysplash   = [];
+
+// carrito: { id -> cantidad }
+let carrito = JSON.parse(localStorage.getItem('rulo_may_carrito')) || {};
+
+function guardarCarrito() {
+  localStorage.setItem('rulo_may_carrito', JSON.stringify(carrito));
+}
+
+function totalUnidades() {
+  return Object.values(carrito).reduce((a, b) => a + b, 0);
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const old = document.getElementById("cartToast");
+  if (old) old.remove();
+  const toast = document.createElement("div");
+  toast.id = "cartToast";
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  toast.offsetHeight;
+  toast.classList.add("toast--visible");
+  setTimeout(() => {
+    toast.classList.remove("toast--visible");
+    setTimeout(() => toast.remove(), 400);
+  }, 2200);
+}
+
+// ===== CARRITO =====
+window.agregarAlCarrito = function(id, event) {
+  if(event) event.stopPropagation();
+  if (!carrito[id]) carrito[id] = 1;
+  else carrito[id]++;
+  guardarCarrito();
+  updateFavUI();
+  actualizarCardCarrito(id);
+  showToast(`✅ Agregado (${carrito[id]} u.)`);
+}
+
+window.cambiarCantidad = function(id, delta, event) {
+  if(event) event.stopPropagation();
+  const nueva = (carrito[id] || 0) + delta;
+  if (nueva <= 0) {
+    delete carrito[id];
+    showToast('🗑️ Quitado del pedido');
+  } else {
+    carrito[id] = nueva;
+  }
+  guardarCarrito();
+  updateFavUI();
+  actualizarCardCarrito(id);
+  const drawer = document.getElementById("cartDrawer");
+  if (drawer && drawer.classList.contains("is-open")) renderCartItems();
+}
+
+function actualizarCardCarrito(id) {
+  const cant = carrito[id] || 0;
+  const btn = document.getElementById(`btn-add-${id}`);
+  const cantEl = document.getElementById(`cant-${id}`);
+  if (btn) {
+    if (cant > 0) {
+      btn.style.display = 'none';
+    } else {
+      btn.style.display = 'flex';
+    }
+  }
+  if (cantEl) {
+    const wrapper = document.getElementById(`cant-wrapper-${id}`);
+    if (wrapper) wrapper.style.display = cant > 0 ? 'flex' : 'none';
+    if (cantEl) cantEl.textContent = cant;
+  }
+}
+
+window.sendAllFavs = function() {
+  const todos = [...perfumes, ...decants, ...promos, ...desodorantes, ...bodysplash];
+  const total = totalUnidades();
+
+  if (total < MINIMO_UNIDADES) {
+    showToast(`⚠️ Mínimo ${MINIMO_UNIDADES} unidades (tenés ${total})`);
+    return;
+  }
+
+  let listaItems = "";
+  for (const [id, cant] of Object.entries(carrito)) {
+    const p = todos.find(x => x.id === Number(id));
+    if (!p) continue;
+    listaItems += `- ${p.nombre} (${p.ml}ml) x${cant} — $${moneyARS(p.precio_mayorista * cant)}\n`;
+  }
+
+  const mensaje = `Hola Rulo! Te hago el siguiente pedido mayorista:\n\n${listaItems}\nTotal: ${total} unidades\n¿Los tenés disponibles?`;
+  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(mensaje)}`, "_blank");
+}
+
+window.openModalById = function(id) {
+  const todos = [...perfumes, ...decants, ...promos, ...desodorantes, ...bodysplash];
+  const p = todos.find(x => x.id === id);
+  if (p) openModal(p);
+}
+
+// ===== CARD TEMPLATE =====
+function cardTemplate(p) {
+  const placeholder = 'img/placeholder.webp';
+  const outOfStock = p.stock === false;
+  const cant = carrito[p.id] || 0;
+
+  return `
+    <article class="card ${outOfStock ? 'out-of-stock' : ''}" onclick="openModalById(${p.id})" data-img="${p.imagen || ''}">
+      <div class="thumb">
+        ${outOfStock ? '<div class="badge-out">Agotado</div>' : ''}
+        <img src="${placeholder}" alt="${p.nombre}" class="lazy-img" onerror="this.onerror=null; this.src='${placeholder}'">
+      </div>
+      <div class="content">
+        <div class="card__info">
+          <div class="name">${p.nombre}</div>
+          <div class="meta">
+            <span class="badge">${p.marca || "-"}</span>
+            <span class="badge">${p.genero || "-"}</span>
+            <span class="badge">${p.ml || "-"}ml</span>
+          </div>
+          <div class="price">
+            ${outOfStock ? "Sin stock" : `<span class="price-actual">$${moneyARS(p.precio_mayorista)}</span>`}
+          </div>
+        </div>
+        <div class="card__actions">
+          ${outOfStock ? '' : `
+            <button id="btn-add-${p.id}" class="btn btn-add"
+                    onclick="agregarAlCarrito(${p.id}, event); event.stopPropagation();"
+                    style="background:rgba(212,162,76,.12);border:1px solid rgba(212,162,76,.30);color:var(--text);display:${cant > 0 ? 'none' : 'flex'};">
+              ➕ Añadir al pedido
+            </button>
+            <div id="cant-wrapper-${p.id}" onclick="event.stopPropagation()"
+                 style="display:${cant > 0 ? 'flex' : 'none'};align-items:center;gap:8px;background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.3);border-radius:12px;padding:8px 12px;justify-content:center;">
+              <button onclick="cambiarCantidad(${p.id}, -1, event)" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;line-height:1;">−</button>
+              <span id="cant-${p.id}" style="font-weight:700;font-size:16px;min-width:24px;text-align:center;">${cant}</span>
+              <button onclick="cambiarCantidad(${p.id}, 1, event)" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;line-height:1;">+</button>
+            </div>
+          `}
+          <a class="btn btn--wa" href="${waLink(p)}" target="_blank" rel="noopener" onclick="event.stopPropagation();">
+            Consultar por WhatsApp
+          </a>
+        </div>
+      </div>
+    </article>`;
+}
+
+function cargarImagenesLazy(container) {
+  container.querySelectorAll('.lazy-img').forEach(async img => {
+    const article = img.closest('[data-img]');
+    if (!article) return;
+    const url = await getImgUrl(article.dataset.img);
+    if (url) img.src = url;
+  });
+}
+
+// ===== RENDERS =====
+function renderPerfumes(list) {
+  if (list.length === 0) { grid.innerHTML = ''; return; }
+
+  const disenadores = list.filter(p => p.linea === 'disenador');
+  const arabes      = list.filter(p => p.linea !== 'disenador');
+
+  function agruparPorMarca(lista) {
+    const grupos = {};
+    lista.forEach(p => {
+      const marca = p.marca || 'Otros';
+      if (!grupos[marca]) grupos[marca] = [];
+      grupos[marca].push(p);
+    });
+    return grupos;
+  }
+
+  let html = '';
+  if (disenadores.length > 0) {
+    const grupos = agruparPorMarca(disenadores);
+    html += `<div class="linea-titulo">✨ Perfumes de Diseñador / Nicho</div>`;
+    for (const [marca, prods] of Object.entries(grupos)) {
+      html += `<div class="marca-titulo">${marca}</div>`;
+      html += `<div class="marca-grid">${prods.map(cardTemplate).join('')}</div>`;
+    }
+  }
+  if (arabes.length > 0) {
+    const grupos = agruparPorMarca(arabes);
+    if (disenadores.length > 0) html += `<div class="linea-titulo">🌙 Perfumes Árabes</div>`;
+    for (const [marca, prods] of Object.entries(grupos)) {
+      html += `<div class="marca-titulo">${marca}</div>`;
+      html += `<div class="marca-grid">${prods.map(cardTemplate).join('')}</div>`;
+    }
+  }
+  grid.innerHTML = html;
+  cargarImagenesLazy(grid);
+}
+
+function renderSeccion(list, gridEl, seccionId) {
+  if (!gridEl) return;
+  const sec = document.getElementById(seccionId);
+  if (list.length === 0) { if (sec) sec.style.display = 'none'; return; }
+  if (sec) sec.style.display = '';
+  gridEl.innerHTML = list.map(cardTemplate).join('');
+  cargarImagenesLazy(gridEl);
+}
+
+// ===== MODAL =====
+const modal       = document.getElementById("modal");
+const modalImg    = document.getElementById("modalImg");
+const modalTitle  = document.getElementById("modalTitle");
+const modalPrice  = document.getElementById("modalPrice");
+const modalBadges = document.getElementById("modalBadges");
+const modalDesc   = document.getElementById("modalDesc");
+const modalWa     = document.getElementById("modalWa");
+
+function openModal(p) {
+  modal.classList.remove("hidden");
+  document.body.classList.add("modal-open");
+  document.body.style.overflow = "hidden";
+  modalImg.src = 'img/placeholder.webp';
+  getImgUrl(p.imagen).then(url => { if (url) modalImg.src = url; });
+  modalTitle.textContent = p.nombre;
+  modalPrice.innerHTML = p.stock === false
+    ? "Sin stock"
+    : `<span class="price-actual">$${moneyARS(p.precio_mayorista)}</span>`;
+  modalBadges.innerHTML = `<span class="badge">${p.marca || "-"}</span><span class="badge">${p.genero || "-"}</span><span class="badge">${p.ml || "-"}ml</span>`;
+  modalDesc.textContent = p.descripcion || "Consultá disponibilidad por WhatsApp.";
+  document.getElementById("notas-salida").textContent  = capitalize(p.notas_salida);
+  document.getElementById("notas-corazon").textContent = capitalize(p.notas_corazon);
+  document.getElementById("notas-fondo").textContent   = capitalize(p.notas_fondo);
+  modalWa.href = waLink(p);
+}
+
+function closeModal() {
+  modal.classList.add("hidden");
+  document.body.classList.remove("modal-open");
+  document.body.style.overflow = "";
+}
+
+document.addEventListener("click", (e) => {
+  if (e.target.id === "modalClose" || e.target.closest("#modalClose") || e.target.classList.contains("modal__backdrop")) closeModal();
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+// ===== FILTROS =====
+function applyFilters() {
+  const q = (search?.value || "").toLowerCase();
+  const f = (filter?.value || "all");
+  const matchesQuery  = (p) => (p.nombre || "").toLowerCase().includes(q) || (p.marca || "").toLowerCase().includes(q);
+  const matchesGender = (p) => !["hombre","mujer","unisex"].includes(f) || (p.genero || "").toLowerCase() === f;
+  const sortFn = f === "asc"  ? (a,b) => a.precio_mayorista - b.precio_mayorista
+               : f === "desc" ? (a,b) => b.precio_mayorista - a.precio_mayorista : null;
+
+  let listP = perfumes.filter(p => matchesQuery(p) && matchesGender(p));
+  if (sortFn) listP.sort(sortFn);
+  else listP.sort((a,b) => b.precio_mayorista - a.precio_mayorista);
+  renderPerfumes(listP);
+
+  renderSeccion(decants.filter(matchesQuery),     decantsGrid,     'decants');
+  renderSeccion(promos.filter(matchesQuery),       promosGrid,      'promos');
+  renderSeccion(desodorantes.filter(matchesQuery), desodorantsGrid, 'desodorantes');
+  renderSeccion(bodysplash.filter(matchesQuery),   bodysplashGrid,  'bodysplash');
+
+  const total = listP.length + decants.filter(matchesQuery).length + promos.filter(matchesQuery).length + desodorantes.filter(matchesQuery).length + bodysplash.filter(matchesQuery).length;
+  empty.classList.toggle("hidden", total !== 0 || !q);
+}
+
+// ===== MENÚ =====
+const menuToggle = document.getElementById("menuToggle");
+const mobileMenu = document.getElementById("mobileMenu");
+if (menuToggle && mobileMenu) {
+  menuToggle.addEventListener("click", (e) => { e.stopPropagation(); mobileMenu.classList.toggle("is-open"); });
+  mobileMenu.querySelectorAll("a").forEach(link => { link.addEventListener("click", () => mobileMenu.classList.remove("is-open")); });
+}
+document.addEventListener("click", (e) => {
+  if (mobileMenu && !mobileMenu.contains(e.target) && e.target !== menuToggle) mobileMenu.classList.remove("is-open");
+});
+
+if (search) search.addEventListener("input", applyFilters);
+if (filter)  filter.addEventListener("change", applyFilters);
+
+// ===== BOTÓN ARRIBA =====
+const topBtn = document.getElementById("topBtn");
+if (topBtn) {
+  topBtn.style.display = "none";
+  window.addEventListener("scroll", () => { topBtn.style.display = window.scrollY > 300 ? "flex" : "none"; });
+  topBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+}
+
+// ===== CARRITO DRAWER =====
+window.toggleCart = function() {
+  const drawer = document.getElementById("cartDrawer");
+  if (!drawer) return;
+  drawer.classList.toggle("is-open");
+  if (drawer.classList.contains("is-open")) renderCartItems();
+}
+
+function renderCartItems() {
+  const container  = document.getElementById("cartItems");
+  const totalSumEl = document.getElementById("cartTotalSum");
+  const btnEnviar  = document.getElementById("btnEnviarPedido");
+  const avisoMin   = document.getElementById("avisoMinimo");
+  if (!container) return;
+
+  const todos = [...perfumes, ...decants, ...promos, ...desodorantes, ...bodysplash];
+  const ids = Object.keys(carrito).filter(id => carrito[id] > 0);
+
+  if (ids.length === 0) {
+    container.innerHTML = '<p style="text-align:center;color:var(--muted);padding:20px;">Tu pedido está vacío...</p>';
+    if(totalSumEl) totalSumEl.innerText = "$0";
+    if(btnEnviar) { btnEnviar.disabled = true; btnEnviar.style.opacity = '.5'; }
+    if(avisoMin) avisoMin.style.display = 'none';
+    return;
+  }
+
+  let totalPesos = 0;
+  let totalUnids = 0;
+
+  container.innerHTML = ids.map(id => {
+    const p = todos.find(x => x.id === Number(id));
+    if (!p) return '';
+    const cant = carrito[id];
+    const subtotal = p.precio_mayorista * cant;
+    totalPesos += subtotal;
+    totalUnids += cant;
+    return `
+      <div class="cart-item" style="flex-direction:column;align-items:flex-start;gap:8px;">
+        <div style="display:flex;gap:10px;align-items:center;width:100%;">
+          <img src="img/placeholder.webp" data-img="${p.imagen || ''}" class="lazy-img" onerror="this.src='img/placeholder.webp'" style="width:44px;height:44px;object-fit:contain;background:white;border-radius:8px;flex-shrink:0;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;">${p.nombre}</div>
+            <div style="color:var(--gold);font-size:12px;">$${moneyARS(p.precio_mayorista)} c/u</div>
+          </div>
+          <button onclick="cambiarCantidad(${p.id}, -cant_all, event)" style="background:none;border:none;color:#ff4444;font-size:16px;cursor:pointer;" onclick="event.stopPropagation()">✕</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;width:100%;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border-radius:10px;padding:4px 10px;">
+            <button onclick="cambiarCantidad(${p.id}, -1, event);renderCartItems();" style="background:none;border:none;color:white;font-size:18px;cursor:pointer;">−</button>
+            <span style="font-weight:700;min-width:20px;text-align:center;">${cant}</span>
+            <button onclick="cambiarCantidad(${p.id}, 1, event);renderCartItems();" style="background:none;border:none;color:white;font-size:18px;cursor:pointer;">+</button>
+          </div>
+          <div style="color:var(--gold);font-weight:700;">$${moneyARS(subtotal)}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  cargarImagenesLazy(container);
+  if(totalSumEl) totalSumEl.innerText = `$${moneyARS(totalPesos)}`;
+
+  // Mostrar total de unidades y validar mínimo
+  const faltan = MINIMO_UNIDADES - totalUnids;
+  if (avisoMin) {
+    if (faltan > 0) {
+      avisoMin.textContent = `⚠️ Te faltan ${faltan} unidad${faltan > 1 ? 'es' : ''} para el mínimo de ${MINIMO_UNIDADES}`;
+      avisoMin.style.display = 'block';
+    } else {
+      avisoMin.textContent = `✅ ${totalUnids} unidades — listo para enviar`;
+      avisoMin.style.color = 'var(--green)';
+      avisoMin.style.display = 'block';
+    }
+  }
+  if (btnEnviar) {
+    btnEnviar.disabled = faltan > 0;
+    btnEnviar.style.opacity = faltan > 0 ? '.5' : '1';
+  }
+}
+
+function updateFavUI() {
+  const countEl  = document.getElementById('favCount');
+  const floatBtn = document.getElementById('favButton');
+  const total = totalUnidades();
+  if(countEl)  countEl.innerText = total;
+  if(floatBtn) floatBtn.style.display = total > 0 ? 'flex' : 'none';
+  const drawer = document.getElementById("cartDrawer");
+  if (drawer && drawer.classList.contains("is-open")) renderCartItems();
+}
+
+// ===== INIT =====
+async function init() {
+  if (grid) grid.innerHTML = `<div style="color:var(--muted);padding:20px;grid-column:1/-1">Cargando productos...</div>`;
+
+  const [p, d, pr, de, bs] = await Promise.all([
+    cargarColeccion('perfumes'),
+    cargarColeccion('decants'),
+    cargarColeccion('promos'),
+    cargarColeccion('desodorantes'),
+    cargarColeccion('bodysplash')
+  ]);
+
+  perfumes     = p;
+  decants      = d;
+  promos       = pr;
+  desodorantes = de;
+  bodysplash   = bs;
+
+  applyFilters();
+  updateFavUI();
+}
+
+init();
