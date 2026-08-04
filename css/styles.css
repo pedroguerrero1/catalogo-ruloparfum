@@ -403,14 +403,22 @@ body{
 }
 
 .category-card {
-  border-radius: 18px;
+  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
   position: relative;
+  background: linear-gradient(135deg, #0e1a2e 0%, #0b1220 100%);
+  border: 1px solid rgba(200, 146, 46, 0.2);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
 }
 
-.category-card:hover  { transform: translateX(6px); filter: brightness(1.08); }
+.category-card:hover {
+  transform: translateX(6px);
+  box-shadow: 0 8px 28px rgba(200,146,46,0.18);
+  border-color: rgba(200,146,46,0.5);
+}
+
 .category-card:active { transform: scale(.98); }
 
 .category-card a {
@@ -418,7 +426,7 @@ body{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px;
+  padding: 20px 22px;
   position: relative;
   z-index: 1;
 }
@@ -427,12 +435,12 @@ body{
 .category-card a::before {
   content: attr(data-num);
   position: absolute;
-  right: 20px;
+  right: 18px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 64px;
+  font-size: 60px;
   font-weight: 900;
-  color: rgba(255,255,255,0.06);
+  color: rgba(200,146,46,0.07);
   line-height: 1;
   pointer-events: none;
   font-family: 'Poppins', sans-serif;
@@ -448,44 +456,41 @@ body{
 /* Línea vertical dorada */
 .cat-bar {
   width: 3px;
-  height: 36px;
+  height: 32px;
   border-radius: 2px;
-  background: rgba(255,255,255,0.5);
+  background: linear-gradient(180deg, var(--gold), rgba(200,146,46,0.3));
   flex-shrink: 0;
 }
 
 /* Título */
 .category-card h2 {
-  font-size: 16px;
-  font-weight: 800;
-  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
   text-transform: uppercase;
   letter-spacing: 2px;
   margin: 0;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
 
-/* Flecha derecha */
+/* Flecha dorada */
 .cat-arrow {
-  color: rgba(255,255,255,0.5);
-  font-size: 18px;
+  color: var(--gold);
+  font-size: 22px;
   flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
 
-/* Gradientes únicos */
-.cat-perfumes     { background: linear-gradient(135deg, #1a1060 0%, #2d1b69 100%); box-shadow: 0 6px 20px rgba(45,27,105,.5); }
-.cat-decants      { background: linear-gradient(135deg, #0f2d4a 0%, #0a1f35 100%); box-shadow: 0 6px 20px rgba(10,31,53,.5); }
-.cat-promos       { background: linear-gradient(135deg, #5c1a00 0%, #8b3a00 100%); box-shadow: 0 6px 20px rgba(139,58,0,.4); }
-.cat-desodorantes { background: linear-gradient(135deg, #0a3020 0%, #0d4a30 100%); box-shadow: 0 6px 20px rgba(13,74,48,.5); }
-.cat-bodysplash   { background: linear-gradient(135deg, #3a0a5c 0%, #5c1a8a 100%); box-shadow: 0 6px 20px rgba(92,26,138,.5); }
+.category-card:hover .cat-arrow {
+  transform: translateX(4px);
+}
 
-/* Brillo superior */
+/* Brillo superior sutil */
 .category-card::after {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: rgba(255,255,255,0.12);
+  background: rgba(200,146,46,0.2);
   pointer-events: none;
 }
 
@@ -493,8 +498,8 @@ body{
   .home-categories { padding: 8px 14px 20px; gap: 8px; }
   .category-card a { padding: 16px 18px; }
   .category-card h2 { font-size: 13px; letter-spacing: 1.5px; }
-  .cat-bar { height: 28px; }
-  .category-card a::before { font-size: 48px; }
+  .cat-bar { height: 26px; }
+  .category-card a::before { font-size: 44px; }
 }
 
   .category-card h2 {
