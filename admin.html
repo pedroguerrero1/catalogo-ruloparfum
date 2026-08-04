@@ -728,19 +728,26 @@
     <!-- Lista desplegable -->
     <div id="listaSeleccionados" style="display:none;background:var(--card);border-radius:12px;padding:10px;max-height:140px;overflow-y:auto;font-size:12px;gap:6px;flex-direction:column;"></div>
 
-    <!-- Acciones en grid 2 columnas -->
-    <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;">
-      <input type="number" id="bulkPct" placeholder="% descuento" min="1" max="99" />
-      <button class="btn-bulk btn-bulk-apply" onclick="aplicarDescuentoMasivo()" style="white-space:nowrap;">% Aplicar</button>
+    <!-- Descuento % -->
+    <div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+      <input type="number" id="bulkPct" placeholder="% descuento" min="1" max="99"
+             style="flex:1;font-size:16px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);outline:none;" />
+      <button class="btn-bulk btn-bulk-apply" onclick="aplicarDescuentoMasivo()" style="white-space:nowrap;flex-shrink:0;">% Aplicar</button>
+    </div>
 
-      <input type="number" id="bulkAumento" placeholder="$ a modificar" min="1" />
-      <div style="display:flex;gap:6px;">
-        <button class="btn-bulk btn-bulk-apply" onclick="aplicarAumentoMasivo(1)" style="flex:1;">＋</button>
-        <button class="btn-bulk" onclick="aplicarAumentoMasivo(-1)" style="flex:1;background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.3);">－</button>
-      </div>
+    <!-- Modificar precio -->
+    <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+      <input type="number" id="bulkAumento" placeholder="$ a modificar" min="1"
+             style="flex:1;font-size:16px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);outline:none;" />
+      <button class="btn-bulk btn-bulk-apply" onclick="aplicarAumentoMasivo(1)" style="flex-shrink:0;">＋</button>
+      <button class="btn-bulk" onclick="aplicarAumentoMasivo(-1)" style="flex-shrink:0;background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.3);">－</button>
+    </div>
 
-      <input type="number" id="bulkMayorista" placeholder="$ mayorista" min="1" />
-      <button class="btn-bulk btn-bulk-apply" onclick="aplicarPrecioMayoristaMasivo()" style="background:#7c3aed;white-space:nowrap;">Mayorista</button>
+    <!-- Precio mayorista -->
+    <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+      <input type="number" id="bulkMayorista" placeholder="$ precio mayorista" min="1" inputmode="numeric"
+             style="flex:1;font-size:16px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);outline:none;" />
+      <button class="btn-bulk btn-bulk-apply" onclick="aplicarPrecioMayoristaMasivo()" style="background:#7c3aed;white-space:nowrap;flex-shrink:0;">Mayorista</button>
     </div>
 
     <button class="btn-bulk btn-bulk-reset" onclick="resetDescuentoMasivo()" style="margin-top:4px;">↺ Quitar descuentos</button>
