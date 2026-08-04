@@ -16,7 +16,15 @@ const db      = getFirestore(app);
 const storage = getStorage(app);
 
 const WHATSAPP_NUMBER = "5493535669706";
-const MINIMO_UNIDADES = 8;
+
+// Mínimos por sección
+const MINIMOS = {
+  perfumes:     7,  // solo perfumes
+  decants:      10,
+  desodorantes: 5,
+  bodysplash:   5,
+  mixto:        5   // cuando hay mix de secciones
+};
 
 const urlCache = {};
 
@@ -40,7 +48,7 @@ async function cargarColeccion(nombre) {
     const q = query(collection(db, nombre), orderBy("id"));
     const snap = await getDocs(q);
     return snap.docs
-      .map(d => d.data())
+      .map(d => ({ ...d.data(), _seccion: nombre }))
       .filter(p => p.id && p.id !== 'temp' && p.activo !== false && p.precio_mayorista);
   } catch(e) {
     console.warn(`No se pudo cargar ${nombre}:`, e);
@@ -80,7 +88,7 @@ let promos       = [];
 let desodorantes = [];
 let bodysplash   = [];
 
-// carrito: { id -> cantidad }
+// carrito: { id -> { cant, seccion } }
 let carrito = JSON.parse(localStorage.getItem('rulo_may_carrito')) || {};
 
 function guardarCarrito() {
@@ -88,7 +96,33 @@ function guardarCarrito() {
 }
 
 function totalUnidades() {
-  return Object.values(carrito).reduce((a, b) => a + b, 0);
+  return Object.values(carrito).reduce((a, b) => a + (b.cant || b), 0);
+}
+
+function calcularMinimo() {
+  // Detectar qué secciones tiene el carrito
+  const secciones = new Set(Object.values(carrito).map(v => v.seccion || 'perfumes'));
+
+  if (secciones.size > 1) return MINIMOS.mixto;
+  const seccion = [...secciones][0];
+  return MINIMOS[seccion] || MINIMOS.mixto;
+}
+
+function getMensajeMinimo() {
+  const total   = totalUnidades();
+  const minimo  = calcularMinimo();
+  const faltan  = minimo - total;
+  const secciones = new Set(Object.values(carrito).map(v => v.seccion || 'perfumes'));
+
+  if (secciones.size === 1) {
+    const sec = [...secciones][0];
+    const nombre = sec === 'perfumes' ? 'perfumes' : sec === 'decants' ? 'decants' : sec === 'desodorantes' ? 'desodorantes' : 'productos';
+    if (faltan > 0) return { ok: false, msg: `⚠️ Mínimo ${minimo} ${nombre} (te faltan ${faltan})` };
+    return { ok: true, msg: `✅ ${total} unidades — listo para enviar` };
+  }
+
+  if (faltan > 0) return { ok: false, msg: `⚠️ Mínimo ${minimo} unidades en total (te faltan ${faltan})` };
+  return { ok: true, msg: `✅ ${total} unidades — listo para enviar` };
 }
 
 // ===== TOAST =====
@@ -108,24 +142,25 @@ function showToast(msg) {
 }
 
 // ===== CARRITO =====
-window.agregarAlCarrito = function(id, event) {
+window.agregarAlCarrito = function(id, seccion, event) {
   if(event) event.stopPropagation();
-  if (!carrito[id]) carrito[id] = 1;
-  else carrito[id]++;
+  if (!carrito[id]) carrito[id] = { cant: 1, seccion };
+  else carrito[id].cant++;
   guardarCarrito();
   updateFavUI();
   actualizarCardCarrito(id);
-  showToast(`✅ Agregado (${carrito[id]} u.)`);
+  showToast(`✅ Agregado (${carrito[id].cant} u.)`);
 }
 
 window.cambiarCantidad = function(id, delta, event) {
   if(event) event.stopPropagation();
-  const nueva = (carrito[id] || 0) + delta;
+  if (!carrito[id]) return;
+  const nueva = carrito[id].cant + delta;
   if (nueva <= 0) {
     delete carrito[id];
     showToast('🗑️ Quitado del pedido');
   } else {
-    carrito[id] = nueva;
+    carrito[id].cant = nueva;
   }
   guardarCarrito();
   updateFavUI();
@@ -134,40 +169,42 @@ window.cambiarCantidad = function(id, delta, event) {
   if (drawer && drawer.classList.contains("is-open")) renderCartItems();
 }
 
+window.quitarDelCarrito = function(id, event) {
+  if(event) event.stopPropagation();
+  delete carrito[id];
+  guardarCarrito();
+  updateFavUI();
+  actualizarCardCarrito(id);
+  renderCartItems();
+  showToast('🗑️ Quitado del pedido');
+}
+
 function actualizarCardCarrito(id) {
-  const cant = carrito[id] || 0;
-  const btn = document.getElementById(`btn-add-${id}`);
+  const item   = carrito[id];
+  const cant   = item ? item.cant : 0;
+  const btnAdd = document.getElementById(`btn-add-${id}`);
+  const wrapper= document.getElementById(`cant-wrapper-${id}`);
   const cantEl = document.getElementById(`cant-${id}`);
-  if (btn) {
-    if (cant > 0) {
-      btn.style.display = 'none';
-    } else {
-      btn.style.display = 'flex';
-    }
-  }
-  if (cantEl) {
-    const wrapper = document.getElementById(`cant-wrapper-${id}`);
-    if (wrapper) wrapper.style.display = cant > 0 ? 'flex' : 'none';
-    if (cantEl) cantEl.textContent = cant;
-  }
+  if (btnAdd)  btnAdd.style.display  = cant > 0 ? 'none' : 'flex';
+  if (wrapper) wrapper.style.display = cant > 0 ? 'flex' : 'none';
+  if (cantEl)  cantEl.textContent    = cant;
 }
 
 window.sendAllFavs = function() {
   const todos = [...perfumes, ...decants, ...promos, ...desodorantes, ...bodysplash];
-  const total = totalUnidades();
+  const { ok, msg } = getMensajeMinimo();
 
-  if (total < MINIMO_UNIDADES) {
-    showToast(`⚠️ Mínimo ${MINIMO_UNIDADES} unidades (tenés ${total})`);
-    return;
-  }
+  if (!ok) { showToast(msg); return; }
 
   let listaItems = "";
-  for (const [id, cant] of Object.entries(carrito)) {
+  for (const [id, item] of Object.entries(carrito)) {
     const p = todos.find(x => x.id === Number(id));
     if (!p) continue;
+    const cant = item.cant || item;
     listaItems += `- ${p.nombre} (${p.ml}ml) x${cant} — $${moneyARS(p.precio_mayorista * cant)}\n`;
   }
 
+  const total = totalUnidades();
   const mensaje = `Hola Rulo! Te hago el siguiente pedido mayorista:\n\n${listaItems}\nTotal: ${total} unidades\n¿Los tenés disponibles?`;
   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(mensaje)}`, "_blank");
 }
@@ -181,8 +218,9 @@ window.openModalById = function(id) {
 // ===== CARD TEMPLATE =====
 function cardTemplate(p) {
   const placeholder = 'img/placeholder.webp';
-  const outOfStock = p.stock === false;
-  const cant = carrito[p.id] || 0;
+  const outOfStock  = p.stock === false;
+  const item        = carrito[p.id];
+  const cant        = item ? item.cant : 0;
 
   return `
     <article class="card ${outOfStock ? 'out-of-stock' : ''}" onclick="openModalById(${p.id})" data-img="${p.imagen || ''}">
@@ -205,15 +243,15 @@ function cardTemplate(p) {
         <div class="card__actions">
           ${outOfStock ? '' : `
             <button id="btn-add-${p.id}" class="btn btn-add"
-                    onclick="agregarAlCarrito(${p.id}, event); event.stopPropagation();"
+                    onclick="agregarAlCarrito(${p.id}, '${p._seccion || 'perfumes'}', event); event.stopPropagation();"
                     style="background:rgba(212,162,76,.12);border:1px solid rgba(212,162,76,.30);color:var(--text);display:${cant > 0 ? 'none' : 'flex'};">
               ➕ Añadir al pedido
             </button>
             <div id="cant-wrapper-${p.id}" onclick="event.stopPropagation()"
                  style="display:${cant > 0 ? 'flex' : 'none'};align-items:center;gap:8px;background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.3);border-radius:12px;padding:8px 12px;justify-content:center;">
-              <button onclick="cambiarCantidad(${p.id}, -1, event)" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;line-height:1;">−</button>
+              <button onclick="cambiarCantidad(${p.id}, -1, event)" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;line-height:1;padding:0 4px;">−</button>
               <span id="cant-${p.id}" style="font-weight:700;font-size:16px;min-width:24px;text-align:center;">${cant}</span>
-              <button onclick="cambiarCantidad(${p.id}, 1, event)" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;line-height:1;">+</button>
+              <button onclick="cambiarCantidad(${p.id}, 1, event)" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;line-height:1;padding:0 4px;">+</button>
             </div>
           `}
           <a class="btn btn--wa" href="${waLink(p)}" target="_blank" rel="noopener" onclick="event.stopPropagation();">
@@ -231,6 +269,28 @@ function cargarImagenesLazy(container) {
     const url = await getImgUrl(article.dataset.img);
     if (url) img.src = url;
   });
+}
+
+// ===== CATEGORÍAS =====
+async function renderCategories() {
+  const container = document.getElementById('mayoristaCategorias');
+  if (!container) return;
+  try {
+    const res = await fetch("data/secciones.json");
+    if (!res.ok) return;
+    const lista = await res.json();
+    const items = await Promise.all(lista.map(async c => {
+      const url = await getImgUrl(c.imagen);
+      return `
+        <article class="category-card">
+          <a href="${c.link}">
+            <div class="thumb"><img src="${url}" alt="${c.nombre}" onerror="this.onerror=null;this.src='img/placeholder.webp'"></div>
+            <h2>${c.nombre}</h2>
+          </a>
+        </article>`;
+    }));
+    container.innerHTML = items.join('');
+  } catch(e) {}
 }
 
 // ===== RENDERS =====
@@ -296,11 +356,9 @@ function openModal(p) {
   modalImg.src = 'img/placeholder.webp';
   getImgUrl(p.imagen).then(url => { if (url) modalImg.src = url; });
   modalTitle.textContent = p.nombre;
-  modalPrice.innerHTML = p.stock === false
-    ? "Sin stock"
-    : `<span class="price-actual">$${moneyARS(p.precio_mayorista)}</span>`;
-  modalBadges.innerHTML = `<span class="badge">${p.marca || "-"}</span><span class="badge">${p.genero || "-"}</span><span class="badge">${p.ml || "-"}ml</span>`;
-  modalDesc.textContent = p.descripcion || "Consultá disponibilidad por WhatsApp.";
+  modalPrice.innerHTML   = p.stock === false ? "Sin stock" : `<span class="price-actual">$${moneyARS(p.precio_mayorista)}</span>`;
+  modalBadges.innerHTML  = `<span class="badge">${p.marca || "-"}</span><span class="badge">${p.genero || "-"}</span><span class="badge">${p.ml || "-"}ml</span>`;
+  modalDesc.textContent  = p.descripcion || "Consultá disponibilidad por WhatsApp.";
   document.getElementById("notas-salida").textContent  = capitalize(p.notas_salida);
   document.getElementById("notas-corazon").textContent = capitalize(p.notas_corazon);
   document.getElementById("notas-fondo").textContent   = capitalize(p.notas_fondo);
@@ -379,13 +437,13 @@ function renderCartItems() {
   if (!container) return;
 
   const todos = [...perfumes, ...decants, ...promos, ...desodorantes, ...bodysplash];
-  const ids = Object.keys(carrito).filter(id => carrito[id] > 0);
+  const ids   = Object.keys(carrito).filter(id => (carrito[id].cant || carrito[id]) > 0);
 
   if (ids.length === 0) {
     container.innerHTML = '<p style="text-align:center;color:var(--muted);padding:20px;">Tu pedido está vacío...</p>';
     if(totalSumEl) totalSumEl.innerText = "$0";
     if(btnEnviar) { btnEnviar.disabled = true; btnEnviar.style.opacity = '.5'; }
-    if(avisoMin) avisoMin.style.display = 'none';
+    if(avisoMin)  avisoMin.style.display = 'none';
     return;
   }
 
@@ -395,27 +453,32 @@ function renderCartItems() {
   container.innerHTML = ids.map(id => {
     const p = todos.find(x => x.id === Number(id));
     if (!p) return '';
-    const cant = carrito[id];
+    const cant     = carrito[id].cant || carrito[id];
     const subtotal = p.precio_mayorista * cant;
     totalPesos += subtotal;
     totalUnids += cant;
     return `
-      <div class="cart-item" style="flex-direction:column;align-items:flex-start;gap:8px;">
+      <div class="cart-item" style="flex-direction:column;align-items:flex-start;gap:8px;padding:12px;">
         <div style="display:flex;gap:10px;align-items:center;width:100%;">
-          <img src="img/placeholder.webp" data-img="${p.imagen || ''}" class="lazy-img" onerror="this.src='img/placeholder.webp'" style="width:44px;height:44px;object-fit:contain;background:white;border-radius:8px;flex-shrink:0;">
+          <img src="img/placeholder.webp" data-img="${p.imagen || ''}" class="lazy-img"
+               onerror="this.src='img/placeholder.webp'"
+               style="width:44px;height:44px;object-fit:contain;background:white;border-radius:8px;flex-shrink:0;">
           <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:600;">${p.nombre}</div>
+            <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.nombre}</div>
             <div style="color:var(--gold);font-size:12px;">$${moneyARS(p.precio_mayorista)} c/u</div>
           </div>
-          <button onclick="cambiarCantidad(${p.id}, -cant_all, event)" style="background:none;border:none;color:#ff4444;font-size:16px;cursor:pointer;" onclick="event.stopPropagation()">✕</button>
+          <button onclick="quitarDelCarrito(${p.id}, event)"
+                  style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#ef4444;font-size:14px;cursor:pointer;padding:4px 8px;flex-shrink:0;">✕</button>
         </div>
         <div style="display:flex;align-items:center;gap:10px;width:100%;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border-radius:10px;padding:4px 10px;">
-            <button onclick="cambiarCantidad(${p.id}, -1, event);renderCartItems();" style="background:none;border:none;color:white;font-size:18px;cursor:pointer;">−</button>
-            <span style="font-weight:700;min-width:20px;text-align:center;">${cant}</span>
-            <button onclick="cambiarCantidad(${p.id}, 1, event);renderCartItems();" style="background:none;border:none;color:white;font-size:18px;cursor:pointer;">+</button>
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border-radius:10px;padding:6px 12px;">
+            <button onclick="cambiarCantidad(${p.id}, -1, event);renderCartItems();"
+                    style="background:none;border:none;color:white;font-size:20px;cursor:pointer;padding:0 2px;">−</button>
+            <span style="font-weight:700;min-width:24px;text-align:center;font-size:15px;">${cant}</span>
+            <button onclick="cambiarCantidad(${p.id}, 1, event);renderCartItems();"
+                    style="background:none;border:none;color:white;font-size:20px;cursor:pointer;padding:0 2px;">+</button>
           </div>
-          <div style="color:var(--gold);font-weight:700;">$${moneyARS(subtotal)}</div>
+          <div style="color:var(--gold);font-weight:700;font-size:14px;">$${moneyARS(subtotal)}</div>
         </div>
       </div>`;
   }).join('');
@@ -423,28 +486,22 @@ function renderCartItems() {
   cargarImagenesLazy(container);
   if(totalSumEl) totalSumEl.innerText = `$${moneyARS(totalPesos)}`;
 
-  // Mostrar total de unidades y validar mínimo
-  const faltan = MINIMO_UNIDADES - totalUnids;
+  const { ok, msg } = getMensajeMinimo();
   if (avisoMin) {
-    if (faltan > 0) {
-      avisoMin.textContent = `⚠️ Te faltan ${faltan} unidad${faltan > 1 ? 'es' : ''} para el mínimo de ${MINIMO_UNIDADES}`;
-      avisoMin.style.display = 'block';
-    } else {
-      avisoMin.textContent = `✅ ${totalUnids} unidades — listo para enviar`;
-      avisoMin.style.color = 'var(--green)';
-      avisoMin.style.display = 'block';
-    }
+    avisoMin.textContent  = msg;
+    avisoMin.style.color  = ok ? 'var(--green)' : '#ef4444';
+    avisoMin.style.display = 'block';
   }
   if (btnEnviar) {
-    btnEnviar.disabled = faltan > 0;
-    btnEnviar.style.opacity = faltan > 0 ? '.5' : '1';
+    btnEnviar.disabled     = !ok;
+    btnEnviar.style.opacity = ok ? '1' : '.5';
   }
 }
 
 function updateFavUI() {
   const countEl  = document.getElementById('favCount');
   const floatBtn = document.getElementById('favButton');
-  const total = totalUnidades();
+  const total    = totalUnidades();
   if(countEl)  countEl.innerText = total;
   if(floatBtn) floatBtn.style.display = total > 0 ? 'flex' : 'none';
   const drawer = document.getElementById("cartDrawer");
@@ -469,6 +526,7 @@ async function init() {
   desodorantes = de;
   bodysplash   = bs;
 
+  renderCategories();
   applyFilters();
   updateFavUI();
 }
