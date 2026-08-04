@@ -205,24 +205,30 @@ function cargarImagenesLazy(container) {
   });
 }
 
-async function categoryTemplate(c) {
-  const imgUrl = await getImgUrl(c.imagen);
+const CATEGORY_CONFIG = {
+  perfumes:     { icon: '🌸', clase: 'cat-perfumes' },
+  decants:      { icon: '🧪', clase: 'cat-decants' },
+  promos:       { icon: '🏷️', clase: 'cat-promos' },
+  desodorantes: { icon: '💨', clase: 'cat-desodorantes' },
+  bodysplash:   { icon: '🫧', clase: 'cat-bodysplash' },
+};
+
+function categoryTemplate(c) {
+  const key    = (c.link || '').replace('#', '').toLowerCase();
+  const config = CATEGORY_CONFIG[key] || { icon: '✨', clase: 'cat-perfumes' };
   return `
-    <article class="category-card">
+    <article class="category-card ${config.clase}">
       <a href="${c.link}">
-        <div class="thumb"><img src="${imgUrl}" alt="${c.nombre}" onerror="this.onerror=null;this.src='img/placeholder.webp'"></div>
+        <span class="cat-icon">${config.icon}</span>
         <h2>${c.nombre}</h2>
       </a>
     </article>`;
 }
 
 // ===== RENDERS =====
-async function renderCategories(lista) {
+function renderCategories(lista) {
   const container = document.querySelector(".home-categories");
-  if (container) {
-    const cards = await Promise.all(lista.map(categoryTemplate));
-    container.innerHTML = cards.join("");
-  }
+  if (container) container.innerHTML = lista.map(categoryTemplate).join("");
 }
 
 async function renderPerfumes(list) {

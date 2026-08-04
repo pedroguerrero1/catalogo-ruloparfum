@@ -18,5 +18,6 @@
     "nombre": "Desodorantes",
     "imagen": "https://firebasestorage.googleapis.com/v0/b/ruloparfum.firebasestorage.app/o/img%2Fcategorias%2Fdesodorantes.webp?alt=media&token=513b05f2-48a1-43f6-96ed-3bc79e0b70ff",
     "link": "#desodorantes"
-  }
+  },
+  { "nombre": "Body Splash", "link": "#bodysplash", "imagen": "" }
 ]

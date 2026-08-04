@@ -272,6 +272,14 @@ function cargarImagenesLazy(container) {
 }
 
 // ===== CATEGORÍAS =====
+const CATEGORY_CONFIG = {
+  perfumes:     { icon: '🌸', clase: 'cat-perfumes' },
+  decants:      { icon: '🧪', clase: 'cat-decants' },
+  promos:       { icon: '🏷️', clase: 'cat-promos' },
+  desodorantes: { icon: '💨', clase: 'cat-desodorantes' },
+  bodysplash:   { icon: '🫧', clase: 'cat-bodysplash' },
+};
+
 async function renderCategories() {
   const container = document.getElementById('mayoristaCategorias');
   if (!container) return;
@@ -279,17 +287,17 @@ async function renderCategories() {
     const res = await fetch("data/secciones.json");
     if (!res.ok) return;
     const lista = await res.json();
-    const items = await Promise.all(lista.map(async c => {
-      const url = await getImgUrl(c.imagen);
+    container.innerHTML = lista.map(c => {
+      const key    = (c.link || '').replace('#', '').toLowerCase();
+      const config = CATEGORY_CONFIG[key] || { icon: '✨', clase: 'cat-perfumes' };
       return `
-        <article class="category-card">
+        <article class="category-card ${config.clase}">
           <a href="${c.link}">
-            <div class="thumb"><img src="${url}" alt="${c.nombre}" onerror="this.onerror=null;this.src='img/placeholder.webp'"></div>
+            <span class="cat-icon">${config.icon}</span>
             <h2>${c.nombre}</h2>
           </a>
         </article>`;
-    }));
-    container.innerHTML = items.join('');
+    }).join('');
   } catch(e) {}
 }
 

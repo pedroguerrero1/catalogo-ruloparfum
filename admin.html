@@ -735,6 +735,10 @@
       <button class="btn-bulk btn-bulk-apply" onclick="aplicarAumentoMasivo(1)">+ Precio</button>
       <button class="btn-bulk" onclick="aplicarAumentoMasivo(-1)" style="background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.3);">- Precio</button>
     </div>
+    <div class="bulk-pct-row">
+      <input type="number" id="bulkMayorista" placeholder="$ precio mayorista" min="1" />
+      <button class="btn-bulk btn-bulk-apply" onclick="aplicarPrecioMayoristaMasivo()" style="background:#7c3aed;">💼 Mayorista</button>
+    </div>
     <button class="btn-bulk btn-bulk-reset" onclick="resetDescuentoMasivo()">↺ Quitar descuento a seleccionados</button>
   </div>
 
@@ -1391,6 +1395,30 @@
       document.getElementById('bulkAumento').value = '';
     } catch(e) {
       showToast('❌ Error al actualizar precios');
+    }
+  };
+
+  window.aplicarPrecioMayoristaMasivo = async function() {
+    const precio = parseFloat(document.getElementById('bulkMayorista').value);
+    if (!precio || precio <= 0) {
+      showToast('⚠️ Ingresá un precio válido');
+      return;
+    }
+    if (seleccionados.size === 0) { showToast('⚠️ No hay productos seleccionados'); return; }
+
+    showToast(`⏳ Aplicando precio mayorista a ${seleccionados.size} productos...`);
+
+    const promesas = Array.from(seleccionados).map(id =>
+      updateDoc(doc(db, tabActual, String(id)), { precio_mayorista: precio })
+    );
+
+    try {
+      await Promise.all(promesas);
+      showToast(`✅ Precio mayorista $${new Intl.NumberFormat('es-AR').format(precio)} aplicado a ${seleccionados.size} productos`);
+      deseleccionarTodos();
+      document.getElementById('bulkMayorista').value = '';
+    } catch(e) {
+      showToast('❌ Error al aplicar precio mayorista');
     }
   };
 
