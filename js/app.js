@@ -206,26 +206,28 @@ function cargarImagenesLazy(container) {
 }
 
 const CATEGORY_CONFIG = {
-  perfumes:     { icon: '🌸', clase: 'cat-perfumes' },
-  decants:      { icon: '🧪', clase: 'cat-decants' },
-  promos:       { icon: '🏷️', clase: 'cat-promos' },
-  desodorantes: { icon: '💨', clase: 'cat-desodorantes' },
-  bodysplash:   { icon: '🫧', clase: 'cat-bodysplash' },
+  perfumes:     { clase: 'cat-perfumes',     num: '01' },
+  decants:      { clase: 'cat-decants',      num: '02' },
+  promos:       { clase: 'cat-promos',       num: '03' },
+  desodorantes: { clase: 'cat-desodorantes', num: '04' },
+  bodysplash:   { clase: 'cat-bodysplash',   num: '05' },
 };
 
 function categoryTemplate(c) {
   const key    = (c.link || '').replace('#', '').toLowerCase();
-  const config = CATEGORY_CONFIG[key] || { icon: '✨', clase: 'cat-perfumes' };
+  const config = CATEGORY_CONFIG[key] || { clase: 'cat-perfumes', num: '01' };
   return `
     <article class="category-card ${config.clase}">
-      <a href="${c.link}">
-        <span class="cat-icon">${config.icon}</span>
-        <h2>${c.nombre}</h2>
+      <a href="${c.link}" data-num="${config.num}">
+        <div class="cat-left">
+          <div class="cat-bar"></div>
+          <h2>${c.nombre}</h2>
+        </div>
+        <span class="cat-arrow">›</span>
       </a>
     </article>`;
 }
 
-// ===== RENDERS =====
 function renderCategories(lista) {
   const container = document.querySelector(".home-categories");
   if (container) container.innerHTML = lista.map(categoryTemplate).join("");
