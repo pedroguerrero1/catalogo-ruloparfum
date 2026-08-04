@@ -690,10 +690,10 @@
     <input class="admin-search" id="adminSearch" type="search" placeholder="Buscar por nombre o marca..." oninput="filtrarLista()" />
 
     <!-- Botones de selección rápida -->
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-      <button class="btn-bulk btn-bulk-cancel" onclick="seleccionarTodos()" style="font-size:12px;padding:8px 12px;">☑️ Seleccionar todos</button>
-      <button class="btn-bulk btn-bulk-cancel" onclick="seleccionarConDescuento()" style="font-size:12px;padding:8px 12px;">🏷️ Seleccionar con descuento</button>
-      <button class="btn-bulk btn-bulk-cancel" onclick="deseleccionarTodos()" style="font-size:12px;padding:8px 12px;">✕ Deseleccionar</button>
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+      <button class="btn-bulk btn-bulk-cancel" onclick="seleccionarTodos()" style="font-size:11px;padding:6px 10px;">☑️ Todos</button>
+      <button class="btn-bulk btn-bulk-cancel" onclick="seleccionarConDescuento()" style="font-size:11px;padding:6px 10px;">🏷️ Con descuento</button>
+      <button class="btn-bulk btn-bulk-cancel" onclick="deseleccionarTodos()" style="font-size:11px;padding:6px 10px;">✕ Limpiar</button>
     </div>
 
     <!-- Mobile: cards -->
@@ -722,24 +722,28 @@
   <div class="bulk-bar" id="bulkBar">
     <div class="bulk-bar-top">
       <span class="bulk-bar-info" id="bulkInfo" onclick="toggleListaSeleccionados()" style="cursor:pointer;">0 seleccionados ▾</span>
-      <button class="btn-bulk btn-bulk-cancel" onclick="deseleccionarTodos()">✕ Cancelar</button>
+      <button class="btn-bulk btn-bulk-cancel" onclick="deseleccionarTodos()">✕</button>
     </div>
-    <!-- Lista desplegable de seleccionados -->
-    <div id="listaSeleccionados" style="display:none;background:var(--card);border-radius:12px;padding:10px;max-height:160px;overflow-y:auto;font-size:12px;gap:6px;flex-direction:column;"></div>
-    <div class="bulk-pct-row">
-      <input type="number" id="bulkPct" placeholder="% de descuento (ej: 10)" min="1" max="99" />
-      <button class="btn-bulk btn-bulk-apply" onclick="aplicarDescuentoMasivo()">Aplicar %</button>
+
+    <!-- Lista desplegable -->
+    <div id="listaSeleccionados" style="display:none;background:var(--card);border-radius:12px;padding:10px;max-height:140px;overflow-y:auto;font-size:12px;gap:6px;flex-direction:column;"></div>
+
+    <!-- Acciones en grid 2 columnas -->
+    <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;">
+      <input type="number" id="bulkPct" placeholder="% descuento" min="1" max="99" />
+      <button class="btn-bulk btn-bulk-apply" onclick="aplicarDescuentoMasivo()" style="white-space:nowrap;">% Aplicar</button>
+
+      <input type="number" id="bulkAumento" placeholder="$ a modificar" min="1" />
+      <div style="display:flex;gap:6px;">
+        <button class="btn-bulk btn-bulk-apply" onclick="aplicarAumentoMasivo(1)" style="flex:1;">＋</button>
+        <button class="btn-bulk" onclick="aplicarAumentoMasivo(-1)" style="flex:1;background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.3);">－</button>
+      </div>
+
+      <input type="number" id="bulkMayorista" placeholder="$ mayorista" min="1" />
+      <button class="btn-bulk btn-bulk-apply" onclick="aplicarPrecioMayoristaMasivo()" style="background:#7c3aed;white-space:nowrap;">Mayorista</button>
     </div>
-    <div class="bulk-pct-row">
-      <input type="number" id="bulkAumento" placeholder="$ a modificar (ej: 5000)" min="1" />
-      <button class="btn-bulk btn-bulk-apply" onclick="aplicarAumentoMasivo(1)">+ Precio</button>
-      <button class="btn-bulk" onclick="aplicarAumentoMasivo(-1)" style="background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.3);">- Precio</button>
-    </div>
-    <div class="bulk-pct-row">
-      <input type="number" id="bulkMayorista" placeholder="$ precio mayorista" min="1" />
-      <button class="btn-bulk btn-bulk-apply" onclick="aplicarPrecioMayoristaMasivo()" style="background:#7c3aed;">💼 Mayorista</button>
-    </div>
-    <button class="btn-bulk btn-bulk-reset" onclick="resetDescuentoMasivo()">↺ Quitar descuento a seleccionados</button>
+
+    <button class="btn-bulk btn-bulk-reset" onclick="resetDescuentoMasivo()" style="margin-top:4px;">↺ Quitar descuentos</button>
   </div>
 
 </div>

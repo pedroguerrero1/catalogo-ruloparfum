@@ -318,6 +318,8 @@ function renderPerfumes(list) {
       if (!grupos[marca]) grupos[marca] = [];
       grupos[marca].push(p);
     });
+    // Ordenar alfabéticamente dentro de cada marca
+    Object.values(grupos).forEach(arr => arr.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es')));
     return grupos;
   }
 
