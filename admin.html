@@ -876,7 +876,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, doc, setDoc, updateDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
@@ -1076,6 +1076,7 @@
             <button class="btn-edit" onclick="abrirModal(${p.id})">✏️ Editar</button>
             <button class="btn-toggle ${toggleClass}" onclick="toggleStock(${p.id})">${toggleLabel}</button>
             ${tieneDescuento ? `<button class="btn-toggle" onclick="resetDescuentoProducto(${p.id})" style="background:rgba(239,68,68,.12);color:#ef4444;border-color:rgba(239,68,68,.3);">↺ Reset</button>` : ''}
+            <button class="btn-toggle" onclick="eliminarProducto(${p.id}, '${p.nombre}')" style="background:rgba(239,68,68,.12);color:#ef4444;border-color:rgba(239,68,68,.3);">🗑️ Borrar</button>
           </div>
         </div>`;
     }).join('');
@@ -1448,6 +1449,18 @@
       deseleccionarTodos();
     } catch(e) {
       showToast('❌ Error al quitar descuentos');
+    }
+  };
+
+  // ===== ELIMINAR PRODUCTO =====
+  window.eliminarProducto = async function(id, nombre) {
+    if (!confirm(`¿Seguro que querés eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
+    try {
+      await deleteDoc(doc(db, tabActual, String(id)));
+      showToast('🗑️ Producto eliminado');
+    } catch(e) {
+      showToast('❌ Error al eliminar');
+      console.error(e);
     }
   };
 

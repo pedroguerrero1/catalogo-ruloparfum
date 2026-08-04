@@ -19,7 +19,7 @@ const WHATSAPP_NUMBER = "5493535669706";
 
 // Mínimos por sección
 const MINIMOS = {
-  perfumes:     7,  // solo perfumes
+  perfumes:     6,  // solo perfumes
   decants:      10,
   desodorantes: 5,
   bodysplash:   5,
