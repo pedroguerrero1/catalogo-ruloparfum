@@ -876,7 +876,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
@@ -981,24 +981,17 @@
   async function cargarProductos() {
     document.getElementById('productosList').innerHTML = '<div class="loading">Cargando...</div>';
     document.getElementById('productosBody').innerHTML = '<tr><td colspan="6" class="loading">Cargando...</td></tr>';
-
-    // Cancelar listener anterior si existe
-    if (unsubscribe) { unsubscribe(); unsubscribe = null; }
-
-    const q = query(collection(db, tabActual), orderBy('id'));
-
-    unsubscribe = onSnapshot(q, async snap => {
-      productos = snap.docs.map(d => d.data()).filter(p => p.id && p.id !== 'temp');
-      // requestAnimationFrame asegura que Safari pinte el DOM correctamente
-      requestAnimationFrame(async () => {
-        await renderLista(productos);
-        renderTabla(productos);
-        renderStats();
-      });
-    }, error => {
-      console.error('onSnapshot error:', error);
+    try {
+      const q    = query(collection(db, tabActual), orderBy('id'));
+      const snap = await getDocs(q);
+      productos  = snap.docs.map(d => d.data()).filter(p => p.id && p.id !== 'temp');
+      await renderLista(productos);
+      renderTabla(productos);
+      renderStats();
+    } catch(e) {
+      console.error(e);
       setTimeout(cargarProductos, 1000);
-    });
+    }
   }
 
   let filtroActivo = 'todos';
