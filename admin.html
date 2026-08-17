@@ -689,6 +689,13 @@
 
     <input class="admin-search" id="adminSearch" type="search" placeholder="Buscar por nombre o marca..." oninput="filtrarLista()" />
 
+    <!-- Filtro ML (solo visible en Decants) -->
+    <div id="filtroMl" style="display:none;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+      <button class="btn-bulk btn-bulk-cancel" id="filtroMl-todos" onclick="filtrarPorMl('todos')" style="font-size:11px;padding:6px 12px;border-color:var(--gold);color:var(--gold);">Todos</button>
+      <button class="btn-bulk btn-bulk-cancel" id="filtroMl-5" onclick="filtrarPorMl('5')" style="font-size:11px;padding:6px 12px;">5ml</button>
+      <button class="btn-bulk btn-bulk-cancel" id="filtroMl-10" onclick="filtrarPorMl('10')" style="font-size:11px;padding:6px 12px;">10ml</button>
+    </div>
+
     <!-- Botones de selección rápida -->
     <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
       <button class="btn-bulk btn-bulk-cancel" onclick="seleccionarTodos()" style="font-size:11px;padding:6px 10px;">☑️ Todos</button>
@@ -972,6 +979,7 @@
     document.getElementById('adminSearch').value = '';
     seleccionados.clear();
     document.getElementById('bulkBar').classList.remove('visible');
+    actualizarFiltroMl();
     cargarProductos();
   };
 
@@ -995,6 +1003,41 @@
   }
 
   let filtroActivo = 'todos';
+  let filtroMlActivo = 'todos';
+
+  // Mostrar/ocultar filtro ML según pestaña
+  function actualizarFiltroMl() {
+    const div = document.getElementById('filtroMl');
+    if (div) div.style.display = tabActual === 'decants' ? 'flex' : 'none';
+    filtroMlActivo = 'todos';
+    // Resetear botones
+    ['todos','5','10'].forEach(k => {
+      const btn = document.getElementById(`filtroMl-${k}`);
+      if (btn) {
+        btn.style.borderColor = k === 'todos' ? 'var(--gold)' : '';
+        btn.style.color = k === 'todos' ? 'var(--gold)' : '';
+      }
+    });
+  }
+
+  window.filtrarPorMl = async function(ml) {
+    filtroMlActivo = ml;
+    // Actualizar estilos de botones
+    ['todos','5','10'].forEach(k => {
+      const btn = document.getElementById(`filtroMl-${k}`);
+      if (btn) {
+        btn.style.borderColor = k === ml ? 'var(--gold)' : '';
+        btn.style.color = k === ml ? 'var(--gold)' : '';
+      }
+    });
+
+    let lista = productos;
+    if (ml !== 'todos') {
+      lista = productos.filter(p => String(p.ml) === ml);
+    }
+    await renderLista(lista);
+    renderTabla(lista);
+  };
 
   // ===== STATS =====
   function renderStats() {

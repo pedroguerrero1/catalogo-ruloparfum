@@ -344,6 +344,32 @@ function renderPerfumes(list) {
   cargarImagenesLazy(grid);
 }
 
+function renderDecants(list, gridEl) {
+  if (!gridEl) return;
+  const sec = document.getElementById('decants');
+  if (list.length === 0) { if (sec) sec.style.display = 'none'; return; }
+  if (sec) sec.style.display = '';
+
+  const grupos = {};
+  list.forEach(p => {
+    const ml = p.ml ? `${p.ml}ml` : 'Otros';
+    if (!grupos[ml]) grupos[ml] = [];
+    grupos[ml].push(p);
+  });
+
+  const gruposOrdenados = Object.entries(grupos).sort((a, b) => {
+    return (parseInt(a[0]) || 0) - (parseInt(b[0]) || 0);
+  });
+
+  let html = '';
+  for (const [ml, prods] of gruposOrdenados) {
+    html += `<div class="marca-titulo">${ml}</div>`;
+    html += `<div class="marca-grid">${prods.map(cardTemplate).join('')}</div>`;
+  }
+  gridEl.innerHTML = html;
+  cargarImagenesLazy(gridEl);
+}
+
 function renderSeccion(list, gridEl, seccionId) {
   if (!gridEl) return;
   const sec = document.getElementById(seccionId);
@@ -403,7 +429,7 @@ function applyFilters() {
   else listP.sort((a,b) => b.precio_mayorista - a.precio_mayorista);
   renderPerfumes(listP);
 
-  renderSeccion(decants.filter(matchesQuery),     decantsGrid,     'decants');
+  renderDecants(decants.filter(matchesQuery),     decantsGrid);
   renderSeccion(promos.filter(matchesQuery),       promosGrid,      'promos');
   renderSeccion(desodorantes.filter(matchesQuery), desodorantsGrid, 'desodorantes');
   renderSeccion(bodysplash.filter(matchesQuery),   bodysplashGrid,  'bodysplash');

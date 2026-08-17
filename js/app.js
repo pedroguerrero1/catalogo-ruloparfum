@@ -280,11 +280,32 @@ async function renderPerfumes(list) {
 }
 
 async function renderDecants(list) {
-  if (decantsGrid) {
-    const filtered = list.filter(p => p.activo !== false);
-    decantsGrid.innerHTML = filtered.map(cardTemplate).join("");
-    cargarImagenesLazy(decantsGrid);
+  if (!decantsGrid) return;
+  const filtered = list.filter(p => p.activo !== false);
+  if (filtered.length === 0) { decantsGrid.innerHTML = ''; return; }
+
+  // Agrupar por ML
+  const grupos = {};
+  filtered.forEach(p => {
+    const ml = p.ml ? `${p.ml}ml` : 'Otros';
+    if (!grupos[ml]) grupos[ml] = [];
+    grupos[ml].push(p);
+  });
+
+  // Ordenar los grupos por ML (numérico)
+  const gruposOrdenados = Object.entries(grupos).sort((a, b) => {
+    const numA = parseInt(a[0]) || 0;
+    const numB = parseInt(b[0]) || 0;
+    return numA - numB;
+  });
+
+  let html = '';
+  for (const [ml, prods] of gruposOrdenados) {
+    html += `<div class="marca-titulo">${ml}</div>`;
+    html += `<div class="marca-grid">${prods.map(cardTemplate).join('')}</div>`;
   }
+  decantsGrid.innerHTML = html;
+  cargarImagenesLazy(decantsGrid);
 }
 
 async function renderPromos(list) {
