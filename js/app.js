@@ -406,8 +406,7 @@ async function applyFilters() {
   const listBs = bodysplash.filter(p => p.activo !== false && matchesQuery(p));
 
   if (decantsGrid) {
-    decantsGrid.innerHTML = listD.map(cardTemplate).join("");
-    cargarImagenesLazy(decantsGrid);
+    await renderDecants(listD);
     const sec = document.getElementById("decants");
     if (sec) sec.style.display = listD.length === 0 && q ? "none" : "";
   }

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Duplicar Decants 10ML</title>
+  <style>
+    body { font-family: monospace; background: #0a0a0a; color: #e5e5e5; padding: 30px; }
+    h1 { color: #c8922e; margin-bottom: 6px; }
+    p { color: #888; margin-bottom: 20px; }
+    button {
+      background: #c8922e; color: white; border: none;
+      padding: 12px 24px; font-size: 15px; border-radius: 8px;
+      cursor: pointer; margin-right: 10px;
+    }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    button.green { background: #25d366; }
+    #log {
+      margin-top: 20px; background: #111; padding: 20px;
+      border-radius: 8px; max-height: 500px; overflow-y: auto;
+      line-height: 2; font-size: 13px;
+    }
+    .ok   { color: #25d366; }
+    .err  { color: #ff4444; }
+    .info { color: #c8922e; }
+    #progress { margin-top: 16px; background: #222; border-radius: 8px; height: 12px; overflow: hidden; display: none; }
+    #progressBar { height: 100%; background: #c8922e; width: 0%; transition: width 0.3s ease; }
+    #stats { margin-top: 8px; font-size: 13px; color: #888; }
+  </style>
+</head>
+<body>
+  <h1>📋 Duplicar Decants → 10ML</h1>
+  <p>Lee todos los decants de 5ml de Firestore y crea versiones de 10ML sin precio. Usalo una sola vez.</p>
+
+  <button class="green" onclick="duplicar()" id="btnDuplicar">🚀 Duplicar todos los decants a 10ML</button>
+
+  <div id="progress"><div id="progressBar"></div></div>
+  <div id="stats"></div>
+  <div id="log"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDBxkSDdPDlE_7mekIvl_GKzgC_GXzCcuw",
+      authDomain: "ruloparfum.firebaseapp.com",
+      projectId: "ruloparfum",
+      storageBucket: "ruloparfum.firebasestorage.app",
+      messagingSenderId: "167849199505",
+      appId: "1:167849199505:web:d5822af67e5f2024aa3c30"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    const logEl      = document.getElementById('log');
+    const progressEl = document.getElementById('progress');
+    const barEl      = document.getElementById('progressBar');
+    const statsEl    = document.getElementById('stats');
+
+    function log(msg, tipo = '') {
+      logEl.innerHTML += `<div class="${tipo}">${msg}</div>`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    window.duplicar = async function() {
+      const btn = document.getElementById('btnDuplicar');
+      btn.disabled = true;
+      log('📦 Leyendo decants de Firestore...', 'info');
+
+      try {
+        const q    = query(collection(db, 'decants'), orderBy('id'));
+        const snap = await getDocs(q);
+        const todos = snap.docs.map(d => d.data()).filter(p => p.id && p.id !== 'temp');
+
+        log(`✅ ${todos.length} decants encontrados.`, 'ok');
+        progressEl.style.display = 'block';
+
+        let ok = 0, err = 0;
+
+        for (let i = 0; i < todos.length; i++) {
+          const original = todos[i];
+
+          // Generar nuevo ID único
+          const nuevoId = Date.now() + i;
+
+          // Agregar "10ML" al nombre si no lo tiene ya
+          const nombre = original.nombre.includes('10ML') || original.nombre.includes('10ml')
+            ? original.nombre
+            : `${original.nombre} 10ML`;
+
+          const nuevo = {
+            ...original,
+            id:     nuevoId,
+            nombre,
+            ml:     10,
+            precio: null,  // Sin precio por ahora
+          };
+
+          // Quitar precio_mayorista también si existía
+          delete nuevo.precio_mayorista;
+          delete nuevo.precio_descuento;
+
+          try {
+            await setDoc(doc(db, 'decants', String(nuevoId)), nuevo);
+            log(`✅ ${nombre}`, 'ok');
+            ok++;
+          } catch(e) {
+            log(`❌ Error en ${nombre}: ${e.message}`, 'err');
+            err++;
+          }
+
+          barEl.style.width = `${Math.round(((i + 1) / todos.length) * 100)}%`;
+          statsEl.textContent = `${i + 1} / ${todos.length} — ✅ ${ok} creados, ❌ ${err} errores`;
+        }
+
+        log(`<br>🎉 Listo. ${ok} decants de 10ML creados. Ya podés cerrar esta página.`, 'info');
+        log(`<br>⚠️ Recordá agregarle el precio a cada uno desde el admin.`, 'info');
+      } catch(e) {
+        log(`❌ Error: ${e.message}`, 'err');
+      }
+
+      btn.disabled = false;
+    };
+  </script>
+</body>
+</html>
