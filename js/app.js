@@ -216,9 +216,12 @@ const CATEGORY_CONFIG = {
 function categoryTemplate(c) {
   const key    = (c.link || '').replace('#', '').toLowerCase();
   const config = CATEGORY_CONFIG[key] || { clase: 'cat-perfumes', num: '01' };
+  const isDecants = key === 'decants';
+  const onclick = isDecants ? `onclick="abrirModalMl(event)"` : '';
+  const href = isDecants ? '#' : c.link;
   return `
     <article class="category-card ${config.clase}">
-      <a href="${c.link}" data-num="${config.num}">
+      <a href="${href}" data-num="${config.num}" ${onclick}>
         <div class="cat-left">
           <div class="cat-bar"></div>
           <h2>${c.nombre}</h2>
@@ -231,6 +234,27 @@ function categoryTemplate(c) {
 function renderCategories(lista) {
   const container = document.querySelector(".home-categories");
   if (container) container.innerHTML = lista.map(categoryTemplate).join("");
+}
+
+// ===== MODAL ML DECANTS =====
+window.abrirModalMl = function(e) {
+  e.preventDefault();
+  document.getElementById('modalMl').style.display = 'flex';
+}
+
+window.cerrarModalMl = function(ml) {
+  document.getElementById('modalMl').style.display = 'none';
+  const filtered = ml === 'todos' 
+    ? decants.filter(p => p.activo !== false)
+    : decants.filter(p => p.activo !== false && String(p.ml) === ml);
+  
+  renderDecants(filtered);
+  
+  // Scroll a la sección
+  setTimeout(() => {
+    const sec = document.getElementById('decants');
+    if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+  }, 100);
 }
 
 async function renderPerfumes(list) {
