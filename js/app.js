@@ -217,11 +217,31 @@ function categoryTemplate(c) {
   const key    = (c.link || '').replace('#', '').toLowerCase();
   const config = CATEGORY_CONFIG[key] || { clase: 'cat-perfumes', num: '01' };
   const isDecants = key === 'decants';
-  const onclick = isDecants ? `onclick="abrirModalMl(event)"` : '';
-  const href = isDecants ? '#' : c.link;
+
+  if (isDecants) {
+    return `
+      <article class="category-card ${config.clase}" style="position:relative;">
+        <div data-num="${config.num}" onclick="toggleDecantMenu(event)" style="cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:space-between;padding:20px 22px;">
+          <div class="cat-left">
+            <div class="cat-bar"></div>
+            <h2>${c.nombre}</h2>
+          </div>
+          <span class="cat-arrow" id="decantArrow">›</span>
+        </div>
+        <div id="decantMenu" style="display:none;border-top:1px solid rgba(200,146,46,.2);padding:8px 22px 12px;">
+          <button onclick="cerrarModalMl('5')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:10px 0;font-size:14px;cursor:pointer;font-family:inherit;border-bottom:1px solid rgba(255,255,255,.05);">
+            → 5ml
+          </button>
+          <button onclick="cerrarModalMl('10')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:10px 0;font-size:14px;cursor:pointer;font-family:inherit;">
+            → 10ml
+          </button>
+        </div>
+      </article>`;
+  }
+
   return `
     <article class="category-card ${config.clase}">
-      <a href="${href}" data-num="${config.num}" ${onclick}>
+      <a href="${c.link}" data-num="${config.num}">
         <div class="cat-left">
           <div class="cat-bar"></div>
           <h2>${c.nombre}</h2>
@@ -236,21 +256,24 @@ function renderCategories(lista) {
   if (container) container.innerHTML = lista.map(categoryTemplate).join("");
 }
 
-// ===== MODAL ML DECANTS =====
-window.abrirModalMl = function(e) {
+window.toggleDecantMenu = function(e) {
   e.preventDefault();
-  document.getElementById('modalMl').style.display = 'flex';
+  const menu  = document.getElementById('decantMenu');
+  const arrow = document.getElementById('decantArrow');
+  const open  = menu.style.display === 'none';
+  menu.style.display  = open ? 'block' : 'none';
+  arrow.textContent   = open ? '⌄' : '›';
 }
 
 window.cerrarModalMl = function(ml) {
+  const menu  = document.getElementById('decantMenu');
+  const arrow = document.getElementById('decantArrow');
+  if (menu)  menu.style.display = 'none';
+  if (arrow) arrow.textContent  = '›';
   document.getElementById('modalMl').style.display = 'none';
-  const filtered = ml === 'todos' 
-    ? decants.filter(p => p.activo !== false)
-    : decants.filter(p => p.activo !== false && String(p.ml) === ml);
-  
+
+  const filtered = decants.filter(p => p.activo !== false && String(p.ml) === ml);
   renderDecants(filtered);
-  
-  // Scroll a la sección
   setTimeout(() => {
     const sec = document.getElementById('decants');
     if (sec) sec.scrollIntoView({ behavior: 'smooth' });

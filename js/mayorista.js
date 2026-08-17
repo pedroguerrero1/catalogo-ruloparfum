@@ -290,6 +290,25 @@ async function renderCategories() {
     container.innerHTML = lista.map(c => {
       const key    = (c.link || '').replace('#', '').toLowerCase();
       const config = CATEGORY_CONFIG[key] || { clase: 'cat-perfumes', num: '01' };
+      const isDecants = key === 'decants';
+
+      if (isDecants) {
+        return `
+          <article class="category-card ${config.clase}" style="position:relative;">
+            <div data-num="${config.num}" onclick="toggleDecantMenu(event)" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:20px 22px;">
+              <div class="cat-left">
+                <div class="cat-bar"></div>
+                <h2>${c.nombre}</h2>
+              </div>
+              <span class="cat-arrow" id="decantArrow">›</span>
+            </div>
+            <div id="decantMenu" style="display:none;border-top:1px solid rgba(200,146,46,.2);padding:8px 22px 12px;">
+              <button onclick="cerrarModalMl('5')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:10px 0;font-size:14px;cursor:pointer;font-family:inherit;border-bottom:1px solid rgba(255,255,255,.05);">→ 5ml</button>
+              <button onclick="cerrarModalMl('10')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:10px 0;font-size:14px;cursor:pointer;font-family:inherit;">→ 10ml</button>
+            </div>
+          </article>`;
+      }
+
       return `
         <article class="category-card ${config.clase}">
           <a href="${c.link}" data-num="${config.num}">
@@ -302,6 +321,29 @@ async function renderCategories() {
         </article>`;
     }).join('');
   } catch(e) {}
+}
+
+window.toggleDecantMenu = function(e) {
+  e.preventDefault();
+  const menu  = document.getElementById('decantMenu');
+  const arrow = document.getElementById('decantArrow');
+  const open  = menu.style.display === 'none';
+  menu.style.display = open ? 'block' : 'none';
+  arrow.textContent  = open ? '⌄' : '›';
+}
+
+window.cerrarModalMl = function(ml) {
+  const menu  = document.getElementById('decantMenu');
+  const arrow = document.getElementById('decantArrow');
+  if (menu)  menu.style.display = 'none';
+  if (arrow) arrow.textContent  = '›';
+
+  const filtered = decants.filter(p => String(p.ml) === ml);
+  renderDecants(filtered, decantsGrid);
+  setTimeout(() => {
+    const sec = document.getElementById('decants');
+    if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+  }, 100);
 }
 
 // ===== RENDERS =====
