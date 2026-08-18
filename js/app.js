@@ -270,14 +270,14 @@ window.cerrarModalMl = function(ml) {
   const arrow = document.getElementById('decantArrow');
   if (menu)  menu.style.display = 'none';
   if (arrow) arrow.textContent  = '›';
-  document.getElementById('modalMl').style.display = 'none';
+  document.getElementById('modalMl') && (document.getElementById('modalMl').style.display = 'none');
 
   const filtered = decants.filter(p => p.activo !== false && String(p.ml) === ml);
   renderDecants(filtered);
   setTimeout(() => {
     const sec = document.getElementById('decants');
     if (sec) sec.scrollIntoView({ behavior: 'smooth' });
-  }, 100);
+  }, 500);
 }
 
 async function renderPerfumes(list) {
