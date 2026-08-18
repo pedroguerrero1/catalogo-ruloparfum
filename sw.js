@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rulo-parfum-v2';
+const CACHE_NAME = 'rulo-parfum-v3';
 const ASSETS = [
   '/',
   '/index.html',
