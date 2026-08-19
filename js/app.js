@@ -38,17 +38,20 @@ async function getImgUrl(path) {
 }
 
 async function cargarColeccion(nombre) {
-  const cacheKey = `rulo_cache_${nombre}`;
+  const cacheKey     = `rulo_cache_${nombre}`;
+  const cacheVersion = `rulo_cache_v_${nombre}`;
   try {
     const q = query(collection(db, nombre), orderBy("id"));
     const snap = await getDocs(q);
     const data = snap.docs.map(d => d.data()).filter(p => p.id && p.id !== 'temp');
-    // Guardar en cache
-    try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch(e) {}
+    // Guardar en cache con timestamp
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify(data));
+      localStorage.setItem(cacheVersion, Date.now().toString());
+    } catch(e) {}
     return data;
   } catch(e) {
     console.warn(`No se pudo cargar ${nombre}:`, e);
-    // Si falla, intentar desde cache
     try {
       const cached = localStorage.getItem(cacheKey);
       if (cached) return JSON.parse(cached);
@@ -59,6 +62,9 @@ async function cargarColeccion(nombre) {
 
 function cargarDesdeCache(nombre) {
   try {
+    const cacheVersion = localStorage.getItem(`rulo_cache_v_${nombre}`);
+    // Cache expira a los 5 minutos
+    if (!cacheVersion || Date.now() - parseInt(cacheVersion) > 5 * 60 * 1000) return null;
     const cached = localStorage.getItem(`rulo_cache_${nombre}`);
     return cached ? JSON.parse(cached) : null;
   } catch(e) { return null; }
