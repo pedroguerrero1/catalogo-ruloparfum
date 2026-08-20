@@ -22,16 +22,17 @@
     .ok   { color: #25d366; }
     .err  { color: #ff4444; }
     .info { color: #c8922e; }
+    .skip { color: #888; }
     #progress { margin-top: 16px; background: #222; border-radius: 8px; height: 12px; overflow: hidden; display: none; }
     #progressBar { height: 100%; background: #c8922e; width: 0%; transition: width 0.3s ease; }
     #stats { margin-top: 8px; font-size: 13px; color: #888; }
   </style>
 </head>
 <body>
-  <h1>📋 Duplicar Decants → 10ML</h1>
-  <p>Lee todos los decants de 5ml de Firestore y crea versiones de 10ML sin precio. Usalo una sola vez.</p>
+  <h1>📋 Duplicar Decants → 10ML (sin repetir)</h1>
+  <p>Solo crea versiones de 10ML para los decants de 5ML que todavía no tienen su versión de 10ML.</p>
 
-  <button class="green" onclick="duplicar()" id="btnDuplicar">🚀 Duplicar todos los decants a 10ML</button>
+  <button class="green" onclick="duplicar()" id="btnDuplicar">🚀 Duplicar decants faltantes a 10ML</button>
 
   <div id="progress"><div id="progressBar"></div></div>
   <div id="stats"></div>
@@ -66,38 +67,51 @@
     window.duplicar = async function() {
       const btn = document.getElementById('btnDuplicar');
       btn.disabled = true;
-      log('📦 Leyendo decants de Firestore...', 'info');
+      log('📦 Leyendo todos los decants de Firestore...', 'info');
 
       try {
         const q    = query(collection(db, 'decants'), orderBy('id'));
         const snap = await getDocs(q);
         const todos = snap.docs.map(d => d.data()).filter(p => p.id && p.id !== 'temp');
 
-        log(`✅ ${todos.length} decants encontrados.`, 'ok');
-        progressEl.style.display = 'block';
+        // Obtener nombres de los que ya tienen 10ml
+        const nombres10ml = new Set(
+          todos
+            .filter(p => p.ml === 10 || p.ml === '10')
+            .map(p => (p.nombre || '').replace(/\s*10ML\s*$/i, '').trim().toLowerCase())
+        );
 
+        // Filtrar solo los de 5ml que NO tienen versión de 10ml
+        const de5ml = todos.filter(p => (p.ml === 5 || p.ml === '5'));
+        const sinDuplicar = de5ml.filter(p => {
+          const nombreBase = (p.nombre || '').trim().toLowerCase();
+          return !nombres10ml.has(nombreBase);
+        });
+
+        log(`✅ ${todos.length} decants totales`, 'ok');
+        log(`📊 ${de5ml.length} de 5ml — ${nombres10ml.size} ya tienen 10ml — ${sinDuplicar.length} para duplicar`, 'info');
+
+        if (sinDuplicar.length === 0) {
+          log('<br>✅ Todos los decants ya tienen su versión de 10ML. No hay nada que hacer.', 'ok');
+          btn.disabled = false;
+          return;
+        }
+
+        progressEl.style.display = 'block';
         let ok = 0, err = 0;
 
-        for (let i = 0; i < todos.length; i++) {
-          const original = todos[i];
-
-          // Generar nuevo ID único
-          const nuevoId = Date.now() + i;
-
-          // Agregar "10ML" al nombre si no lo tiene ya
-          const nombre = original.nombre.includes('10ML') || original.nombre.includes('10ml')
-            ? original.nombre
-            : `${original.nombre} 10ML`;
+        for (let i = 0; i < sinDuplicar.length; i++) {
+          const original = sinDuplicar[i];
+          const nuevoId  = Date.now() + i;
+          const nombre   = `${original.nombre.trim()} 10ML`;
 
           const nuevo = {
             ...original,
             id:     nuevoId,
             nombre,
             ml:     10,
-            precio: null,  // Sin precio por ahora
+            precio: null,
           };
-
-          // Quitar precio_mayorista también si existía
           delete nuevo.precio_mayorista;
           delete nuevo.precio_descuento;
 
@@ -110,12 +124,11 @@
             err++;
           }
 
-          barEl.style.width = `${Math.round(((i + 1) / todos.length) * 100)}%`;
-          statsEl.textContent = `${i + 1} / ${todos.length} — ✅ ${ok} creados, ❌ ${err} errores`;
+          barEl.style.width = `${Math.round(((i + 1) / sinDuplicar.length) * 100)}%`;
+          statsEl.textContent = `${i + 1} / ${sinDuplicar.length} — ✅ ${ok} creados, ❌ ${err} errores`;
         }
 
-        log(`<br>🎉 Listo. ${ok} decants de 10ML creados. Ya podés cerrar esta página.`, 'info');
-        log(`<br>⚠️ Recordá agregarle el precio a cada uno desde el admin.`, 'info');
+        log(`<br>🎉 Listo. ${ok} decants de 10ML creados. Recordá agregarles precio desde el admin.`, 'info');
       } catch(e) {
         log(`❌ Error: ${e.message}`, 'err');
       }
