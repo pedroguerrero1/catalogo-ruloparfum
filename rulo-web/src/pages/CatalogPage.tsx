@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { FloatingWhatsApp } from '@/components/layout/FloatingWhatsApp';
@@ -29,6 +29,17 @@ export function CatalogPage({ config }: { config: CatalogConfig }) {
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
   const [perfumeBrand, setPerfumeBrand] = useState<string | null>(null);
   const [decantBrand, setDecantBrand] = useState<string | null>(null);
+
+  // Safety net: if a query hangs (some in-app browsers stall network requests
+  // instead of erroring), stop blocking the whole page after a few seconds
+  // and show whatever sections did load.
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  useEffect(() => {
+    if (!data.isLoading) return;
+    const timer = setTimeout(() => setLoadingTimedOut(true), 8000);
+    return () => clearTimeout(timer);
+  }, [data.isLoading]);
+  const showLoadingState = data.isLoading && !loadingTimedOut;
 
   const getPrice = (p: Product) => config.getDisplayPrice(p).current;
   const filterState = { query, filter };
@@ -133,7 +144,7 @@ export function CatalogPage({ config }: { config: CatalogConfig }) {
 
         <CategoryNav
           availability={
-            data.isLoading
+            showLoadingState
               ? undefined
               : {
                   perfumes: data.perfumes.length > 0,
@@ -146,7 +157,7 @@ export function CatalogPage({ config }: { config: CatalogConfig }) {
           }
         />
 
-        {data.isLoading ? (
+        {showLoadingState ? (
           <div className="flex flex-col items-center gap-3 py-20">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-gold" />
             <p className="text-sm text-muted">Cargando catálogo...</p>
