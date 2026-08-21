@@ -1,6 +1,23 @@
 import { useState, type FormEvent } from 'react';
 import { login } from '@/firebase/auth';
 
+const ERROR_MESSAGES: Record<string, string> = {
+  'auth/invalid-credential': 'Email o contraseña incorrectos.',
+  'auth/wrong-password': 'Email o contraseña incorrectos.',
+  'auth/user-not-found': 'Email o contraseña incorrectos.',
+  'auth/invalid-email': 'Ese email no es válido.',
+  'auth/user-disabled': 'Esta cuenta fue deshabilitada.',
+  'auth/too-many-requests': 'Demasiados intentos fallidos. Esperá unos minutos e intentá de nuevo.',
+  'auth/network-request-failed': 'Error de conexión. Revisá tu internet e intentá de nuevo.',
+  'auth/unauthorized-domain': 'Este dominio no está autorizado en Firebase todavía.',
+};
+
+function describeAuthError(err: unknown): string {
+  const code = (err as { code?: string })?.code;
+  if (code && ERROR_MESSAGES[code]) return ERROR_MESSAGES[code];
+  return code ? `Error al iniciar sesión (${code}).` : 'Error al iniciar sesión.';
+}
+
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,9 +30,9 @@ export default function AdminLogin() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
-    } catch {
-      setError('Email o contraseña incorrectos.');
+      await login(email.trim(), password);
+    } catch (err) {
+      setError(describeAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -38,6 +55,9 @@ export default function AdminLogin() {
             type="email"
             required
             autoComplete="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
