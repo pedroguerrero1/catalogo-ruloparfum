@@ -68,7 +68,9 @@ export default function AdminImageUpload({ currentImage, file, url, onFileChange
 
       {preview && (
         <div className="mt-2.5 flex items-center gap-2.5 rounded-xl border border-border bg-card p-2">
-          <img src={preview} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover" />
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white">
+            <img src={preview} alt="" className="h-full w-full object-contain p-0.5" />
+          </div>
           <span className="truncate text-xs text-muted">{previewLabel}</span>
         </div>
       )}

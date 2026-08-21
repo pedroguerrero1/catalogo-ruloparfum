@@ -18,8 +18,14 @@ interface Props {
 
 function ProductThumb({ path, alt, className }: { path?: string; alt: string; className: string }) {
   const src = useProductImage(path);
-  if (!src) return <div className={clsx(className, 'animate-pulse bg-card')} aria-hidden />;
-  return <img src={src} alt={alt} loading="lazy" className={className} />;
+  if (!src) {
+    return <div className={clsx(className, 'animate-pulse bg-card')} aria-hidden />;
+  }
+  return (
+    <div className={clsx(className, 'flex items-center justify-center overflow-hidden bg-white')}>
+      <img src={src} alt={alt} loading="lazy" className="h-full w-full object-contain p-1" />
+    </div>
+  );
 }
 
 function estadoInfo(p: Product) {
@@ -73,7 +79,7 @@ export default function AdminProductList({
                   aria-label={`Seleccionar ${p.nombre}`}
                 />
               </label>
-              <ProductThumb path={p.imagen} alt={p.nombre} className="h-16 w-16 shrink-0 rounded-lg object-cover" />
+              <ProductThumb path={p.imagen} alt={p.nombre} className="h-16 w-16 shrink-0 rounded-lg" />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-heading text-sm font-semibold text-text">{p.nombre}</p>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -176,7 +182,7 @@ export default function AdminProductList({
                     />
                   </td>
                   <td className="px-3 py-2.5">
-                    <ProductThumb path={p.imagen} alt={p.nombre} className="h-10 w-10 rounded-lg object-cover" />
+                    <ProductThumb path={p.imagen} alt={p.nombre} className="h-10 w-10 rounded-lg" />
                   </td>
                   <td className="max-w-[220px] truncate px-3 py-2.5 font-semibold text-text">{p.nombre}</td>
                   <td className="px-3 py-2.5 text-muted">{p.marca || '-'}</td>
