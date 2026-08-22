@@ -14,11 +14,13 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// In-app browsers (WhatsApp, Instagram, Facebook) often block the WebSocket
-// connection Firestore uses by default, which just hangs instead of erroring.
-// Auto-detecting long-polling falls back to plain HTTP requests when needed.
+// In-app browsers (WhatsApp, Instagram, Facebook) and some mobile Safari
+// setups block or slow down the WebSocket connection Firestore uses by
+// default. This app only ever does one-off reads (no realtime listeners),
+// so forcing long-polling skips the auto-detection probe entirely — it
+// connects over plain HTTPS every time instead of trying WebSocket first.
 export const db = initializeFirestore(app, {
-  experimentalAutoDetectLongPolling: true,
+  experimentalForceLongPolling: true,
 });
 export const auth = getAuth(app);
 export const storage = getStorage(app);
