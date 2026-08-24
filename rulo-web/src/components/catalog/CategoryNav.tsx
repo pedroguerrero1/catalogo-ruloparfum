@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import {
-  Cigarette,
+  CloudFog,
   Droplet,
   Droplets,
   FlaskConical,
@@ -19,7 +19,7 @@ const CATEGORY_ICON: Record<string, LucideIcon> = {
   '#desodorantes': Wind,
   '#bodysplash': Droplets,
   '#cremas': Droplet,
-  '#vapers': Cigarette,
+  '#vapers': CloudFog,
 };
 
 function scrollToId(id: string) {
