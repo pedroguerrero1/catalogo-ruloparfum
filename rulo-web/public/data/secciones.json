@@ -20,5 +20,6 @@
     "link": "#desodorantes"
   },
   { "nombre": "Body Splash", "link": "#bodysplash", "imagen": "" },
-  { "nombre": "Crema/Serum", "link": "#cremas", "imagen": "" }
+  { "nombre": "Crema/Serum", "link": "#cremas", "imagen": "" },
+  { "nombre": "Vapers", "link": "#vapers", "imagen": "" }
 ]

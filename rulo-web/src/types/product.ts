@@ -8,7 +8,8 @@ export type CollectionName =
   | 'promos'
   | 'desodorantes'
   | 'bodysplash'
-  | 'cremas';
+  | 'cremas'
+  | 'vapers';
 
 export interface Product {
   id: number;
@@ -45,4 +46,5 @@ export const COLLECTIONS: CollectionName[] = [
   'desodorantes',
   'bodysplash',
   'cremas',
+  'vapers',
 ];

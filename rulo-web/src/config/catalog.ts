@@ -56,6 +56,7 @@ export const wholesaleCatalogConfig: CatalogConfig = {
     desodorantes: 5,
     bodysplash: 5,
     cremas: 5,
+    vapers: 5,
     mixto: 5,
   },
 };

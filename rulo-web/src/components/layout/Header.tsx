@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: '#desodorantes', label: 'Desodorantes' },
   { href: '#bodysplash', label: 'Body Splash' },
   { href: '#cremas', label: 'Crema/Serum' },
+  { href: '#vapers', label: 'Vapers' },
 ];
 
 interface HeaderProps {

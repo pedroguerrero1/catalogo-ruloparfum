@@ -10,6 +10,7 @@ export interface CatalogData {
   desodorantes: Product[];
   bodysplash: Product[];
   cremas: Product[];
+  vapers: Product[];
   isLoading: boolean;
 }
 
@@ -32,9 +33,9 @@ export function useCatalogData(config: CatalogConfig): CatalogData {
   });
 
   const isLoading = results.some((r) => r.isLoading);
-  const [perfumes, decants, promos, desodorantes, bodysplash, cremas] = results.map(
+  const [perfumes, decants, promos, desodorantes, bodysplash, cremas, vapers] = results.map(
     (r) => (r.data as Product[] | undefined) ?? [],
   );
 
-  return { perfumes, decants, promos, desodorantes, bodysplash, cremas, isLoading };
+  return { perfumes, decants, promos, desodorantes, bodysplash, cremas, vapers, isLoading };
 }

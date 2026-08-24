@@ -74,6 +74,11 @@ export function CatalogPage({ config }: { config: CatalogConfig }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [data.cremas, query],
   );
+  const vapers = useMemo(
+    () => applyFilters(data.vapers, filterState, getPrice, { applyGenderAndSort: false }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data.vapers, query],
+  );
 
   const perfumeBrands = useMemo(() => uniqueBrands(perfumes), [perfumes]);
   const effectivePerfumeBrand =
@@ -96,6 +101,7 @@ export function CatalogPage({ config }: { config: CatalogConfig }) {
     ...data.desodorantes,
     ...data.bodysplash,
     ...data.cremas,
+    ...data.vapers,
   ];
   const totalResults =
     perfumes.length +
@@ -103,7 +109,8 @@ export function CatalogPage({ config }: { config: CatalogConfig }) {
     promos.length +
     desodorantes.length +
     bodysplash.length +
-    cremas.length;
+    cremas.length +
+    vapers.length;
   const noResults = query.trim() !== '' && totalResults === 0;
 
   const cartCount = useCartCount(config.variant);
@@ -153,6 +160,7 @@ export function CatalogPage({ config }: { config: CatalogConfig }) {
                   desodorantes: data.desodorantes.length > 0,
                   bodysplash: data.bodysplash.length > 0,
                   cremas: data.cremas.length > 0,
+                  vapers: data.vapers.length > 0,
                 }
           }
         />
@@ -233,6 +241,12 @@ export function CatalogPage({ config }: { config: CatalogConfig }) {
             {cremas.length > 0 ? (
               <CatalogSection id="cremas" title="Crema/Serum">
                 <ProductGrid products={cremas} config={config} onOpenModal={setActiveProduct} />
+              </CatalogSection>
+            ) : null}
+
+            {vapers.length > 0 ? (
+              <CatalogSection id="vapers" title="Vapers">
+                <ProductGrid products={vapers} config={config} onOpenModal={setActiveProduct} />
               </CatalogSection>
             ) : null}
           </div>

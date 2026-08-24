@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import clsx from 'clsx';
-import { Droplet, Droplets, FlaskConical, Gift, Sparkles, Wind, type LucideIcon } from 'lucide-react';
+import {
+  Cigarette,
+  Droplet,
+  Droplets,
+  FlaskConical,
+  Gift,
+  Sparkles,
+  Wind,
+  type LucideIcon,
+} from 'lucide-react';
 import { useCategorySections } from '@/hooks/useCategorySections';
 
 const CATEGORY_ICON: Record<string, LucideIcon> = {
@@ -10,6 +19,7 @@ const CATEGORY_ICON: Record<string, LucideIcon> = {
   '#desodorantes': Wind,
   '#bodysplash': Droplets,
   '#cremas': Droplet,
+  '#vapers': Cigarette,
 };
 
 function scrollToId(id: string) {

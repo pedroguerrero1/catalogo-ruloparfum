@@ -10,6 +10,7 @@ export const COLLECTION_LABELS: Record<CollectionName, string> = {
   desodorantes: 'Desos',
   bodysplash: 'Body Splash',
   cremas: 'Crema/Serum',
+  vapers: 'Vapers',
 };
 
 export interface AdminStats {
