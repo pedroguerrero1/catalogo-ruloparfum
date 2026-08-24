@@ -69,6 +69,7 @@ export default function AdminProductForm({ collectionName, product, onSave, onCl
 
   const otherMl: '5' | '10' | null = ml === '5' ? '10' : ml === '10' ? '5' : null;
   const showDecantDuplicate = collectionName === 'decants' && !editing && otherMl !== null;
+  const showNotes = !['decants', 'cremas', 'vapers'].includes(collectionName);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -402,38 +403,42 @@ export default function AdminProductForm({ collectionName, product, onSave, onCl
               />
             </div>
 
-            <div className="col-span-2">
-              <label className={labelClass}>Notas de salida</label>
-              <input
-                type="text"
-                value={notasSalida}
-                onChange={(e) => setNotasSalida(e.target.value)}
-                placeholder="Bergamota, naranja..."
-                className={inputClass}
-              />
-            </div>
+            {showNotes ? (
+              <>
+                <div className="col-span-2">
+                  <label className={labelClass}>Notas de salida</label>
+                  <input
+                    type="text"
+                    value={notasSalida}
+                    onChange={(e) => setNotasSalida(e.target.value)}
+                    placeholder="Bergamota, naranja..."
+                    className={inputClass}
+                  />
+                </div>
 
-            <div className="col-span-2">
-              <label className={labelClass}>Notas de corazón</label>
-              <input
-                type="text"
-                value={notasCorazon}
-                onChange={(e) => setNotasCorazon(e.target.value)}
-                placeholder="Rosa, jazmín..."
-                className={inputClass}
-              />
-            </div>
+                <div className="col-span-2">
+                  <label className={labelClass}>Notas de corazón</label>
+                  <input
+                    type="text"
+                    value={notasCorazon}
+                    onChange={(e) => setNotasCorazon(e.target.value)}
+                    placeholder="Rosa, jazmín..."
+                    className={inputClass}
+                  />
+                </div>
 
-            <div className="col-span-2">
-              <label className={labelClass}>Notas de fondo</label>
-              <input
-                type="text"
-                value={notasFondo}
-                onChange={(e) => setNotasFondo(e.target.value)}
-                placeholder="Ámbar, vainilla..."
-                className={inputClass}
-              />
-            </div>
+                <div className="col-span-2">
+                  <label className={labelClass}>Notas de fondo</label>
+                  <input
+                    type="text"
+                    value={notasFondo}
+                    onChange={(e) => setNotasFondo(e.target.value)}
+                    placeholder="Ámbar, vainilla..."
+                    className={inputClass}
+                  />
+                </div>
+              </>
+            ) : null}
           </div>
         </div>
 
