@@ -6,7 +6,7 @@ export type MlFilter = 'todos' | '5' | '10';
 export const COLLECTION_LABELS: Record<CollectionName, string> = {
   perfumes: 'Perfumes',
   decants: 'Decants',
-  promos: 'Promos',
+  promos: 'Kits',
   desodorantes: 'Desos',
   bodysplash: 'Body Splash',
   cremas: 'Crema/Serum',

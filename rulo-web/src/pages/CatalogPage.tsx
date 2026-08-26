@@ -217,7 +217,7 @@ export function CatalogPage({ config }: { config: CatalogConfig }) {
             ) : null}
 
             {promos.length > 0 ? (
-              <CatalogSection id="promos" title="Promociones">
+              <CatalogSection id="promos" title="Kits">
                 <ProductGrid products={promos} config={config} onOpenModal={setActiveProduct} />
               </CatalogSection>
             ) : null}

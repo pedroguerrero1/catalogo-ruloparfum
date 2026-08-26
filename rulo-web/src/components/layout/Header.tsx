@@ -7,7 +7,7 @@ const LOGO_URL =
 const NAV_LINKS = [
   { href: '#perfumes', label: 'Perfumes' },
   { href: '#decants', label: 'Decants' },
-  { href: '#promos', label: 'Promos' },
+  { href: '#promos', label: 'Kits' },
   { href: '#desodorantes', label: 'Desodorantes' },
   { href: '#bodysplash', label: 'Body Splash' },
   { href: '#cremas', label: 'Crema/Serum' },
