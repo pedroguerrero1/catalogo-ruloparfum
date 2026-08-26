@@ -13,25 +13,6 @@ export default function AdminPage() {
 
   useEffect(() => watchAuthState(setUser), []);
 
-  // Point "Add to Home Screen" here at /admin instead of the retail catalog.
-  useEffect(() => {
-    const manifestLink = document.getElementById('manifest-link') as HTMLLinkElement | null;
-    const appleTitle = document.getElementById('apple-title') as HTMLMetaElement | null;
-    const prevManifestHref = manifestLink?.getAttribute('href');
-    const prevAppleTitle = appleTitle?.getAttribute('content');
-    const prevTitle = document.title;
-
-    manifestLink?.setAttribute('href', '/manifest-admin.json');
-    appleTitle?.setAttribute('content', 'RULO Admin');
-    document.title = 'RULO Admin';
-
-    return () => {
-      if (prevManifestHref) manifestLink?.setAttribute('href', prevManifestHref);
-      if (prevAppleTitle) appleTitle?.setAttribute('content', prevAppleTitle);
-      document.title = prevTitle;
-    };
-  }, []);
-
   if (user === undefined) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg">
